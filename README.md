@@ -18,13 +18,13 @@ README: [go to this file](./openmv/README.md)
 
 ## 底盘Arduino
 
-README：
+README：[go to this file](./Arduino/README.md)
 
 **TODO**
 
-- [ ] 麦轮小车搭建
-- [ ] PID
-- [ ] 指令接收和处理
+- [x] 麦轮小车搭建
+- [x] PID
+- [x] 指令接收和处理
 
 
 
@@ -38,7 +38,7 @@ README：
 
 ## 机械臂
 
-
+README：
 
 
 
