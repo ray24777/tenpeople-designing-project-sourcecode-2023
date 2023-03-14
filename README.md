@@ -30,9 +30,14 @@ README：[go to this file](./Arduino/README.md)
 
 ## 主控
 
-README：
+README：[go to this file](./mcu/README.md)
 
-
+**TODO**
+- [ ] 移植Arduino部分代码
+- [ ] 移植舵机部分代码
+- [ ] 移植通信模块部分代码
+- [ ] 综合编程（是否使用RTOS？）
+- [ ] 测试
 
 
 
