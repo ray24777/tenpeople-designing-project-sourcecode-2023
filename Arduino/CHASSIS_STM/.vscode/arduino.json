@@ -1,0 +1,5 @@
+{
+    "board": "STMicroelectronics:stm32:GenG4",
+    "programmer": "arduino:avrispmkii",
+    "configuration": "pnum=GENERIC_G474RETX,upload_method=swdMethod,xserial=generic,usb=none,xusb=FS,opt=osstd,dbg=none,rtlib=nano"
+}
