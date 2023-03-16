@@ -52,7 +52,7 @@ README：[go to this file](./Machine_Arm/README.md)
 
 ## 时间和通讯
 
-README：[go to this file](./Timer&C/README.md)
+README：[go to this file](./Timer&Communication/README.md)
 
 **TODO**
 
