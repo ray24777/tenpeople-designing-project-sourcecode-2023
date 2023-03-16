@@ -47,7 +47,7 @@ README：[go to this file](./Machine_Arm/README.md)
 
 **TODO**
 - [ ] 待部件到了连接舵机实现测试
-- [ ] 第二版 3D 打印
+- [x] 第二版 3D 打印建模
 
 ## 时间和通讯
 
