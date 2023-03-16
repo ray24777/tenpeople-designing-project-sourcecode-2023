@@ -1,4 +1,8 @@
-/*Code for DS3231*/
+## Timmer
+
+#### DS3231 module（stm32L432kc）：
+
+```c
 
 #include "mbed.h"
 #include "ds3231.h"
