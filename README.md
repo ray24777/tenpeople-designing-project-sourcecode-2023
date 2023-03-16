@@ -49,9 +49,15 @@ README：[go to this file](./Machine_Arm/README.md)
 - [ ] 待部件到了连接舵机实现测试
 - [x] 第二版 3D 打印建模
 
+
 ## 时间和通讯
 
-README：
+README：[go to this file](./Timer&C/README.md)
+
+**TODO**
+
+- [x] HC12模块之间进行数据传输
+- [x] stm32L432KC读取DS3231的当前时间，并返回到电脑上
 
 
 
