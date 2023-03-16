@@ -1,6 +1,6 @@
 ## Machine_Arm
 
-#### 测速用代码（arduino）：
+### 测速用代码（arduino）：
 
 ```c
 /* This example Arduino Sketch controls the complete rotation of
@@ -19,12 +19,12 @@ void setup() {
 
 void loop() {
   MG995_Servo.write(0); //Turn clockwise at high speed
-  delay(3000);
-  MG995_Servo.detach();//Stop. You can use deatch function or use write(x), as x is the middle of 0-180 which is 90, but some lack of precision may change this value
-  delay(2000);
-  MG995_Servo.attach(Servo_PWM);//Always use attach function after detach to re-connect your servo with the board
-  // MG995_Servo.write(180);
-  // delay(3000);
+  delay(5000);
+  // MG995_Servo.detach();//Stop. You can use deatch function or use write(x), as x is the middle of 0-180 which is 90, but some lack of precision may change this value
+  // delay(2000);
+  // MG995_Servo.attach(Servo_PWM);//Always use attach function after detach to re-connect your servo with the board
+  MG995_Servo.write(180);
+  delay(5000);
   // MG995_Servo.detach();//Stop
   // delay(2000);
   // MG995_Servo.attach(Servo_PWM);
@@ -35,7 +35,21 @@ void loop() {
 
 
 
-#### 机械设计 v1:
+### 大致流程
+
+当小车到达垃圾桶前面时，主控（stm32）通过 pwm 信号使能机械臂，让其从初始位置旋转 180 度，将球竖直向下投入口正下方的框里。在小车上的舵机和机械臂将会有平台垫高以保证舵机和机械臂的高度高于框，因此球一定能落入框内
+
+选择这个结构的原因：
+
+1. 简单，只需单舵机就可完成
+
+2. 轻且占用空间较小。plc 材料不是特别重，并且相较于桥型的结果。该设计占用空间较小
+
+3. 自定义。3d 建模可以保证我们能定制传动杆的长度，厚度，以及接口种类。并且可以对不同的物品进行定制，比如该任务的网球。通过建模可以使其无阻尼地滑入框并且不容易卡住和落出
+
+   
+
+### 机械设计 v1:
 
 <img src="pic\image-20230316100444417.png" alt="image-20230316100444417" style="zoom:33%;" /><img src="pic\image-20230316100512331.png" alt="image-20230316100512331" style="zoom:33%;" />
 
@@ -57,15 +71,9 @@ void loop() {
 
 
 
-#### 整体效果
+### 整体效果
 
 ![image-20230316100909854](pic/image-20230316100909854.png)
-
-
-
-#### 计划：
-
-舵机旋转通过传动杆带动球筐旋转 180 度，理想情况下球会在前方落下
 
 
 
@@ -89,9 +97,7 @@ void loop() {
 
 缺点：
 
-​	网球大约 90 度后会落出，落点太近
-
-​	传动杆硬度不足
+​	传动杆硬度不足，不过影响不大
 
 
 
@@ -105,5 +111,6 @@ void loop() {
 
 **TODO**
 
-- [ ] 待部件到了连接舵机实现测试
-- [ ] 第二版 3D 打印
+- [x] 待部件到了连接舵机实现测试
+- [x] 第二版 3D 打印
+- [ ] 等待实机搭建，固定垫高平台

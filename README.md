@@ -46,8 +46,10 @@ README：[go to this file](./mcu/README.md)
 README：[go to this file](./Machine_Arm/README.md)
 
 **TODO**
-- [ ] 待部件到了连接舵机实现测试
+- [x] 待部件到了连接舵机实现测试
 - [x] 第二版 3D 打印建模
+- [x] 总体搭建
+- [ ] 等待实机搭建，固定垫高平台
 
 ## 时间和通讯
 
