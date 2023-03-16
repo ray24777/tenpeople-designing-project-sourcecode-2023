@@ -90,7 +90,6 @@ int main()
     while(1){
         
        if (uint32_t num = port1.read(&c, sizeof(buf))) {
-            // Toggle the LED.
             
             port1.write(buf, num);
         }
