@@ -51,9 +51,15 @@ README：[go to this file](./Machine_Arm/README.md)
 - [x] 总体搭建
 - [ ] 等待实机搭建，固定垫高平台
 
+
 ## 时间和通讯
 
-README：
+README：[go to this file](./Timer&Communication/README.md)
+
+**TODO**
+
+- [x] HC12模块之间进行数据传输
+- [x] stm32L432KC读取DS3231的当前时间，并返回到电脑上
 
 
 
