@@ -57,10 +57,11 @@ README：[go to this file](./Machine_Arm/README.md)
 README：[go to this file](./Timer&Communication/README.md)
 
 **TODO**
-
+###第一阶段任务：
 - [x] HC12模块之间进行数据传输
 - [x] stm32L432KC读取DS3231的当前时间，并返回到电脑上
-
+###第二阶段任务：
+- [ ] 直接传输时间
 
 
 ## 整体流程
