@@ -1,6 +1,7 @@
 ## Timmer
 
 #### DS3231 module（stm32L432kc）：
+#### Attention：Mbed OS5平台代码：
 
 ```c
 #include "mbed.h"
