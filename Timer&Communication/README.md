@@ -5,6 +5,7 @@
 ```c
 #include "mbed.h"
 #include "ds3231.h"
+#include <cstdio>
 #include <string>
 
 
@@ -17,8 +18,8 @@
 
 I2C i2c(D4, D5);
 
-static UnbufferedSerial serial_port(USBTX, USBRX);
-UnbufferedSerial port1(PA_9, PA_10, 9600);
+Serial hc(D1,D0); // tx, rx
+
 
 void rtc_isr()
 {
@@ -40,13 +41,8 @@ void rtc_isr()
 
 int main()
 {   
-    serial_port.baud(9600);
+    hc.baud(9600);
 
-    serial_port.format(
-        /* bits */ 8,
-        /* parity */ BufferedSerial::None,
-        /* stop bit */ 1
-    );
     //DS3231 rtc
     Ds3231 rtc(D4, D5);
     
@@ -84,26 +80,29 @@ int main()
     char buffer[32];
     time_t epoch_time;
 
-    char c;
     char buf[MAXIMUM_BUFFER_SIZE]={0};
+    char c;
 
     while(1){
-        
-       if (uint32_t num = port1.read(&c, sizeof(buf))) {
-            
-            port1.write(buf, num);
-        }
 
-              //new epoch time fx
+       if (hc.getc()==1){
+        
         epoch_time = rtc.get_epoch();
-        printf("\nTeam number is 07");
-        printf("\nNow Time is = %s", ctime(&epoch_time));
+        printf("\nTeam number is 07 \n");
+        printf("\nNow Time is = %s\n", ctime(&epoch_time));
  
         strftime(buffer, 32, "%I:%M %p\n", localtime(&epoch_time));
 
-        wait_us(5000000);
-    }
+        }
+
+
+        wait(5);
+    
+        
+    
 }
+}
+
 ```
 
 ## Communication
@@ -112,31 +111,21 @@ int main()
 ```c
 #include "mbed.h"
 
-// Maximum number of element the application buffer can contain
-#define MAXIMUM_BUFFER_SIZE                                                  32
+Serial hc(D1,D0); // tx, rx
+int num=1;
+AnalogIn control(A4);
 
-static BufferedSerial serial_port(USBTX, USBRX);
-BufferedSerial port1(PA_9, PA_10, 9600);
-
-AnalogIn signal(A5);  
-
-int main(void)
-{
-    // Set desired properties (9600-8-N-1).
-    serial_port.set_baud(9600);
-    serial_port.set_format(
-        /* bits */ 8,
-        /* parity */ BufferedSerial::None,
-        /* stop bit */ 1
-    );
-    char buf[MAXIMUM_BUFFER_SIZE] = {0};
-
-            
-            int num=1;
-            if(signal>0.8){
-                 port1.write(buf, num);
-                 wait_us(5000000);
-                } 
-            
+int main() {
+    hc.baud(9600);
+   while(1){
+    if(control>0.8){
+    hc.putc(num);
+    wait(5);
+       }
+    if(control<0.5){
+    hc.putc(0);
+    wait(5);
+    }
+   }
 }
 ```
