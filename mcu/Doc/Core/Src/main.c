@@ -53,14 +53,14 @@ TIM_HandleTypeDef htim5;
 //varables for the timer
 uint8_t timel_flag=0;//0: first capture, 1: second capture
 uint8_t timel_fin=0;//0: not finished, 1: finished
-uint32_t timel_1=0;
-uint32_t timel_2=0;//left sensor
+uint64_t timel_1=0;
+uint64_t timel_2=0;//left sensor
 double cml=0;//cm of left sensor
 
 uint8_t timer_flag=0;//0: first capture, 1: second capture
 uint8_t timer_fin=0;//0: not finished, 1: finished
-uint32_t timer_1=0;
-uint32_t timer_2=0;//right sensor
+uint64_t timer_1=0;
+uint64_t timer_2=0;//right sensor
 double cmr=0;//cm of right sensor
 
 uint8_t timef_flag=0;
@@ -116,7 +116,7 @@ void toggleLD2(int delay) {
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin,GPIO_PIN_RESET);
   HAL_Delay(delay);
 
-  printf("Working\r\n");
+  //printf("Working\r\n");
   
 }
 
@@ -129,12 +129,14 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
           if(timer_flag==0)
           {
             timer_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+            printf("Echo right: tr1= %d us\r",timer_1*10);
             timer_flag=1;
             timer_fin=0;
           }
           else
           {
             timer_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+            printf("Echo right: tr2= %d us\r",timer_2*10);
             timer_flag=0;
             timer_fin=1;
             if(timer_1<timer_2)//if the timer is not overflowed
@@ -145,9 +147,10 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
             {
               cmr = (double)(timer_2 + 0xffffffff - timer_1) * 0.017;//340*100/1e6/2
             }
+            timer_1=0;
           }
           //printf("Echo right: t1= %.3f us,  t2= %.3f us\r",timer_1*10, timer_2*10);
-          //printf("Distance right = %.3f cm. \r\n",  cmr);
+          printf("Distance right = %.3f cm. \r\n",  cmr);
           HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
           break;
 
@@ -155,12 +158,14 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
           if(timel_flag==0)
           {
             timel_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+            printf("Echo left: tl1= %d us\r",timel_1*10);
             timel_flag=1;
             timel_fin=0;
           }
           else
           {
             timel_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+            printf("Echo left: tl2= %d us\r",timel_2*10);
             timel_flag=0;
             timel_fin=1;
             if(timel_1<timel_2)//if the timer is not overflowed
@@ -171,9 +176,10 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
             {
               cml = (double)(timel_2 + 0xffffffff - timel_1) * 0.017;//340*100/1e6/2
             }
+            timel_1=0;
           }
           //printf("Echo left: t1= %.3f us,  t2= %.3f us\r",timel_1*10, timel_2*10);
-          //printf("Distance left = %.3f cm. \r\n",  cml);
+          printf("Distance left = %.3f cm. \r\n",  cml);
           HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
           break;
         default:
@@ -187,6 +193,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
           if(timef_flag==0)
           {
             timef_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+            //printf("Echo front: tf1= %d us\r",timef_1*10);
             timef_flag=1;
             timef_fin=0;
           }
@@ -203,9 +210,10 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
             {
               cmf = (double)(timef_2 + 0xffff - timef_1) * 3.4;//340*100/5e3/2
             }
+            timef_1=0;
           }
-          //printf("Echo right: t1= %.3f us,  t2= %.3f us\r",timer_1*10, timer_2*10);
-          //printf("Distance right = %.3f cm. \r\n",  cmr);
+          //printf("Echo front: t= %.3f us\r\n",timel_1*10, timer_2*10);
+          //printf("Distance front = %.3f cm. \r\n",  cmf);
           HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
           break;
         default:
@@ -218,19 +226,20 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 void drive ()
 {
   //Transfer int to char for output
-    char outputstr [10];
-    outputstr [0] = xflag  + 30;
-    outputstr [1] = xspeed / 10 + 30;
-    outputstr [2] = xspeed % 10 + 30;
-    outputstr [3] = yflag  + 30;
-    outputstr [4] = yspeed / 10 + 30;
-    outputstr [5] = yspeed % 10 + 30;
-    outputstr [6] = wflag  + 30;
-    outputstr [7] = wspeed / 100 + 30;
-    outputstr [8] = wspeed % 100 / 10 + 30;
-    outputstr [9] = wspeed % 10 + 30;
+    char outputstr [11];
+    outputstr [0] = 0x90;
+    outputstr [1] = xflag;
+    outputstr [2] = xspeed / 10;
+    outputstr [3] = xspeed % 10;
+    outputstr [4] = yflag;
+    outputstr [5] = yspeed / 10;
+    outputstr [6] = yspeed % 10;
+    outputstr [7] = wflag;
+    outputstr [8] = wspeed / 100;
+    outputstr [9] = wspeed % 100 / 10;
+    outputstr [10] = wspeed % 10;
     //Transmit the instruction to the motor driver
-    HAL_UART_Transmit(&huart4, (uint8_t*)outputstr, 10, 100);
+    HAL_UART_Transmit(&huart4, (uint8_t*)outputstr, 11, 100);
 }
 //Redirect arduino print to UART
 void print(double c)
@@ -347,11 +356,11 @@ void Alignment(double cmleft, double cmright)
     }
   }
   // Serial.print("Echoleft,right =");
-  // Serial.print(templeft);//串口输出等待时间的原始数据
+  // Serial.print(templeft);//串口输出等待时间的原始数�?
   // Serial.print(",");
   // Serial.print(tempright);
   // Serial.print(" | | Distanceleft,right = ");
-  // Serial.print(cmleft);//串口输出距离换算成cm的结果
+  // Serial.print(cmleft);//串口输出距离换算成cm的结�?
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
@@ -430,35 +439,41 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    // if(cmf<=5)
-    // {
-    //   while(1)
-    //   {
-    //     Forward(0);
-    //     Left(0);
-    //     Turn_Left(0);
-    //     drive();
-    //     toggleLD2(200);
-    //   }
-    // }
-
-    // if(timel_fin==1 && timer_fin ==1)//if two counting is finished
-    // {
-    // Alignment(cml, cmr);
-    // //   timel_fin=0;
-    // //   timer_fin=0;
-    // // }
-    // Forward(20);
-    // drive();
-    while(1)
+    if(cmf<=5)
+    {
+      while(1)
       {
         Forward(0);
-        Right(0);
+        Left(0);
         Turn_Left(0);
         drive();
-        toggleLD2(20);
+        toggleLD2(200);
+        if (cmf>5)
+        {
+          break;
+        }
       }
-  }
+    }
+
+    if(timel_fin==1 && timer_fin ==1)//if two counting is finished
+    {
+    Alignment(cml, cmr);
+    //   timel_fin=0;
+    //   timer_fin=0;
+    // }
+    Forward(20);
+    drive();
+    toggleLD2(200);
+    }
+  //   while(1)
+  //     {
+  //       Forward(10);
+  //       Right(0);
+  //       Turn_Left(0);
+  //       drive();
+  //       toggleLD2(200);
+  //     }
+    }
   /* USER CODE END 3 */
 }
 
@@ -729,7 +744,7 @@ static void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_BOTHEDGE;
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
