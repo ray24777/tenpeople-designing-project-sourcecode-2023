@@ -125,18 +125,18 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM5) {
       switch (htim->Channel) {
-        case HAL_TIM_ACTIVE_CHANNEL_1://right sensor 
+        case HAL_TIM_ACTIVE_CHANNEL_2://right sensor 
           if(timer_flag==0)
           {
-            timer_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-            printf("Echo right: tr1= %d us\r",timer_1*10);
+            timer_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+            //printf("Echo right counter tr1= %d\r\n",timer_1);
             timer_flag=1;
             timer_fin=0;
           }
           else
           {
-            timer_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-            printf("Echo right: tr2= %d us\r",timer_2*10);
+            timer_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+            //printf("Echo right counter tr2= %d\r\n",timer_2);
             timer_flag=0;
             timer_fin=1;
             if(timer_1<timer_2)//if the timer is not overflowed
@@ -148,24 +148,24 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
               cmr = (double)(timer_2 + 0xffffffff - timer_1) * 0.017;//340*100/1e6/2
             }
             timer_1=0;
+            //printf("Distance right = %.3f cm. \r\n",  cmr);
           }
           //printf("Echo right: t1= %.3f us,  t2= %.3f us\r",timer_1*10, timer_2*10);
-          printf("Distance right = %.3f cm. \r\n",  cmr);
-          HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
+          HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
           break;
 
-        case HAL_TIM_ACTIVE_CHANNEL_2://left sensor
+        case HAL_TIM_ACTIVE_CHANNEL_1://left sensor
           if(timel_flag==0)
           {
-            timel_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-            printf("Echo left: tl1= %d us\r",timel_1*10);
+            timel_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+            //printf("Echo left counter tl1= %d\r\n",timel_1);
             timel_flag=1;
             timel_fin=0;
           }
           else
           {
-            timel_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-            printf("Echo left: tl2= %d us\r",timel_2*10);
+            timel_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+            //printf("Echo left counter tl2= %d\r\n",timel_2);
             timel_flag=0;
             timel_fin=1;
             if(timel_1<timel_2)//if the timer is not overflowed
@@ -179,8 +179,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
             timel_1=0;
           }
           //printf("Echo left: t1= %.3f us,  t2= %.3f us\r",timel_1*10, timel_2*10);
-          printf("Distance left = %.3f cm. \r\n",  cml);
-          HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
+          //printf("Distance left = %.3f cm. \r\n",  cml);
+          HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
           break;
         default:
           printf("Error timer channel.\r\n");
@@ -291,68 +291,80 @@ void Turn_Right(uint8_t speed)
 
 void Alignment(double cmleft, double cmright)
 {
-  Inputultra = cml-cmr;
+  printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cmleft, cmright);
+  Inputultra = cmleft-cmleft;
   Inputdistance = (cmleft + cmright) / 2;
 
-  PID_Compute(&myPIDdistance);
+  if (PID_Compute(&myPIDdistance)==_FALSE)
+    printf("PID_Compute for distance error\r\n");
+
+  printf("Outputdistance = %.3f\r\n", Outputdistance);
   //myPIDdistance.Compute();
 
-  if(Outputdistance < 0)
+  if(Outputdistance < 0)//if there is a need to move closer to wall
   {
-    if(Inputdistance < 11)
+    if(Inputdistance < 11)//but the actual distance is not that far
     {
-      println(Inputdistance);
-      println(Outputdistance);
+      //do nothing
+      //println(Inputdistance);
+      //println(Outputdistance);
       //allstop();?
     }
     else
     {
-      Right(-(uint8_t)Outputdistance);
-      println(Inputdistance);
-      println(Outputdistance);
+      //move far from the wall
+      printf("Too far from wall\r\n");
+      Right((uint8_t)(-Outputdistance));
+      // println(Inputdistance);
+      // println(Outputdistance);
     }
   }
   else
-  {
-    if(Inputdistance > 9)
+  {//if there is a need to move far from the wall
+    if(Inputdistance > 9)//but the actual distance is not that close
     {
-      println(Inputdistance);
-      println(Outputdistance);
+      //do nothing
+      // println(Inputdistance);
+      // println(Outputdistance);
       //allstop();
     }
     else
     {
+      printf("Too close to wall\r\n");
       Left((uint8_t)Outputdistance);
-      println(Inputdistance);
-      println(Outputdistance);
+      // println(Inputdistance);
+      // println(Outputdistance);
     }
   }
 
-  PID_Compute(&myPIDultra);
+  if (PID_Compute(&myPIDultra)==_FALSE)
+    printf("PID_Compute for ultra error\r\n");
+
+  printf("Outputultra = %.3f\r\n", Outputultra);
   //myPIDultra.Compute();
 
   if (Outputultra >= 0)
   {
     if(Inputultra < 2)
     {
-      print(Inputultra);
+      //print(Inputultra);
     }
     else
     {
-      Turn_Left((int)Outputultra);
-      print(Inputultra);
+      Turn_Left((uint8_t)Outputultra);
+      //print(Inputultra);
     }
   }
   else
   {
     if(Inputultra > -2)
     {
-      print(Inputultra);
+      //print(Inputultra);
     }
     else
     {
-      Turn_Right(-(int)Outputultra);
-      print(Inputultra);
+      Turn_Right((uint8_t)(-Outputultra));
+      //print(Inputultra);
     }
   }
   // Serial.print("Echoleft,right =");
@@ -364,7 +376,7 @@ void Alignment(double cmleft, double cmright)
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
-  printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cmleft, cmright);
+  
   
 
 }
