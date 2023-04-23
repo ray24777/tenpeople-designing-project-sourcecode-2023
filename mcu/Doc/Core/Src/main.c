@@ -73,7 +73,7 @@ double cmf=0;//cm of right sensor
 double Inputultra, Outputultra;
 double Setpointultra= 0;
 double Inputdistance, Outputdistance;
-double Setpointdistance= 9.5;
+double Setpointdistance= 20;
 PID_TypeDef myPIDultra; //PID structure
 PID_TypeDef myPIDdistance; //PID structure
 
@@ -292,7 +292,7 @@ void Turn_Right(uint8_t speed)
 void Alignment(double cmleft, double cmright)
 {
   printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cmleft, cmright);
-  Inputultra = cmleft-cmleft;
+  Inputultra = cmleft-cmright;
   Inputdistance = (cmleft + cmright) / 2;
 
   if (PID_Compute(&myPIDdistance)==_FALSE)
@@ -303,35 +303,37 @@ void Alignment(double cmleft, double cmright)
 
   if(Outputdistance < 0)//if there is a need to move closer to wall
   {
-    if(Inputdistance < 11)//but the actual distance is not that far
+    if(Inputdistance < 21)//but the actual distance is not that far
     {
       //do nothing
       //println(Inputdistance);
       //println(Outputdistance);
       //allstop();?
+      Left(0);
     }
     else
     {
       //move far from the wall
       printf("Too far from wall\r\n");
-      Right((uint8_t)(-Outputdistance));
+      Left((uint8_t)(-Outputdistance));
       // println(Inputdistance);
       // println(Outputdistance);
     }
   }
   else
   {//if there is a need to move far from the wall
-    if(Inputdistance > 9)//but the actual distance is not that close
+    if(Inputdistance > 19)//but the actual distance is not that close
     {
       //do nothing
       // println(Inputdistance);
       // println(Outputdistance);
       //allstop();
+      Right(0);
     }
     else
     {
       printf("Too close to wall\r\n");
-      Left((uint8_t)Outputdistance);
+      Right((uint8_t)Outputdistance);
       // println(Inputdistance);
       // println(Outputdistance);
     }
@@ -348,10 +350,11 @@ void Alignment(double cmleft, double cmright)
     if(Inputultra < 2)
     {
       //print(Inputultra);
+      Turn_Right(0);
     }
     else
     {
-      Turn_Left((uint8_t)Outputultra);
+      Turn_Right((uint8_t)Outputultra);
       //print(Inputultra);
     }
   }
@@ -360,10 +363,11 @@ void Alignment(double cmleft, double cmright)
     if(Inputultra > -2)
     {
       //print(Inputultra);
+      Turn_Left(0);
     }
     else
     {
-      Turn_Right((uint8_t)(-Outputultra));
+      Turn_Left((uint8_t)(-Outputultra));
       //print(Inputultra);
     }
   }
@@ -424,15 +428,15 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   //Load parameters to PID
-  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra,  1, 80, 1, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra,  20, 40, 1, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDultra, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&myPIDultra, 50);
-  PID_SetOutputLimits(&myPIDultra, -255,255);
+  PID_SetOutputLimits(&myPIDultra, -500, 500);
 
-  PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance,  0.1, 8, 0.1, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance,  0.8, 200, 15, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDdistance, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&myPIDdistance, 50);
-  PID_SetOutputLimits(&myPIDdistance, -30, 30);
+  PID_SetOutputLimits(&myPIDdistance, -20, 20);
 
   //start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -459,7 +463,7 @@ int main(void)
         Left(0);
         Turn_Left(0);
         drive();
-        toggleLD2(200);
+        toggleLD2(100);
         if (cmf>5)
         {
           break;
@@ -475,7 +479,7 @@ int main(void)
     // }
     Forward(20);
     drive();
-    toggleLD2(200);
+    toggleLD2(50);
     }
   //   while(1)
   //     {
