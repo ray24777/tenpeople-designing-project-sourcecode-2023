@@ -160,6 +160,48 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 
   /* USER CODE END UART4_MspInit 1 */
   }
+  else if(huart->Instance==UART5)
+  {
+  /* USER CODE BEGIN UART5_MspInit 0 */
+
+  /* USER CODE END UART5_MspInit 0 */
+
+  /** Initializes the peripherals clocks
+  */
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_UART5;
+    PeriphClkInit.Uart5ClockSelection = RCC_UART5CLKSOURCE_PCLK1;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* Peripheral clock enable */
+    __HAL_RCC_UART5_CLK_ENABLE();
+
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    /**UART5 GPIO Configuration
+    PC12     ------> UART5_TX
+    PD2     ------> UART5_RX
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF5_UART5;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_2;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF5_UART5;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN UART5_MspInit 1 */
+
+  /* USER CODE END UART5_MspInit 1 */
+  }
 
 }
 
@@ -206,6 +248,26 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
   /* USER CODE BEGIN UART4_MspDeInit 1 */
 
   /* USER CODE END UART4_MspDeInit 1 */
+  }
+  else if(huart->Instance==UART5)
+  {
+  /* USER CODE BEGIN UART5_MspDeInit 0 */
+
+  /* USER CODE END UART5_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_UART5_CLK_DISABLE();
+
+    /**UART5 GPIO Configuration
+    PC12     ------> UART5_TX
+    PD2     ------> UART5_RX
+    */
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_12);
+
+    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
+
+  /* USER CODE BEGIN UART5_MspDeInit 1 */
+
+  /* USER CODE END UART5_MspDeInit 1 */
   }
 
 }
