@@ -33,7 +33,7 @@ README：[go to this file](./Arduino/README.md)
 README：[go to this file](./mcu/README.md)
 
 **TODO**
-- [ ] 移植Arduino部分代码
+- [x] 移植Arduino部分代码
 - [ ] 移植舵机部分代码
 - [ ] 移植通信模块部分代码
 - [ ] 综合编程（是否使用RTOS？）
