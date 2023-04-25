@@ -382,7 +382,10 @@ void Alignment(double cmleft, double cmright)
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
-  
+uint8_t hc12send(uint8_t data)
+{
+  HAL_UART_Transmit(&uart5, &data, 1, 100);
+} 
   
 
 }
