@@ -31,12 +31,6 @@ Following the table for wiring.
 
 ## H7
 
-### Power
-|H7 Port  | PCB Port  |
-|-----------|-----------|
-|E5V |5V|
-|GND |GND|
-
 ### GPIO
 
 |H7 GPIO Port  | Output Device  | Output Device Port  |
