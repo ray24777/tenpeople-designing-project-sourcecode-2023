@@ -35,11 +35,14 @@ README：[go to this file](./mcu/README.md)
 **TODO**
 - [x] 移植Arduino部分代码
 - [ ] 移植舵机部分代码
-- [ ] 移植通信模块部分代码
+- [X] 移植通信模块部分代码
 - [ ] 综合编程（是否使用RTOS？）
 - [ ] 测试
 
 
+## PCB
+
+Wiring: [go to this file](./PCB/README.md)
 
 ## 机械臂
 
