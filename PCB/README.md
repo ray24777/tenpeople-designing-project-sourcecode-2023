@@ -13,6 +13,7 @@ Following the table for wiring.
 
 |G474 GPIO Port  | Output Device  | Output Device Port  |
 |-----------|-----------|-----------|
+|NRST|Push Button|GND|
 |PC1 |Metal Servo|PWM|
 |PC2 |Blue Servo A|PWM|
 |PC3 |Blue Servo B|PWM|
