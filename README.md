@@ -43,7 +43,7 @@ README：[go to this file](./mcu/README.md)
 ## PCB
 
 Wiring: [go to this file](./PCB/README.md)
-
+目前统计了所有的接线方式，准备开始制作PCB
 ## 机械臂
 
 README：[go to this file](./Machine_Arm/README.md)
