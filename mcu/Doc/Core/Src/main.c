@@ -387,6 +387,8 @@ void Alignment(double cmleft, double cmright)
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
+}
+
 uint8_t hc12send(uint8_t data)
 {
   return HAL_UART_Transmit(&huart5, &data, 1, 100);
@@ -486,26 +488,39 @@ int main(void)
         }
       }
     }
-
-    if(timel_fin==1 && timer_fin ==1)//if two counting is finished
-    {
-    Alignment(cml, cmr);
-    //   timel_fin=0;
-    //   timer_fin=0;
+//task2 codes
+    // if(timel_fin==1 && timer_fin ==1)//if two counting is finished
+    // {
+    // Alignment(cml, cmr);
+    // //   timel_fin=0;
+    // //   timer_fin=0;
+    // // }
+    // Forward(20);
+    // drive();
+    // toggleLD2(50);
     // }
-    Forward(20);
-    drive();
-    toggleLD2(50);
+
+
+    //test tracking 
+    Left(0);
+    if (openmvreceive==HAL_OK)
+    {
+      switch (openmv_instrction[4])
+      {
+        //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
+      case '0':
+        Turn_Left((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
+        break;
+      
+      case '1':
+        Turn_Right((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
+        break;
+      }
+      Forward(20);
+      drive();
     }
-  //   while(1)
-  //     {
-  //       Forward(10);
-  //       Right(0);
-  //       Turn_Left(0);
-  //       drive();
-  //       toggleLD2(200);
-  //     }
-    }
+
+  }
   /* USER CODE END 3 */
 }
 
