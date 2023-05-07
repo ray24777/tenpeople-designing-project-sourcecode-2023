@@ -89,6 +89,7 @@ uint8_t yflag=0;//2: right, 1: left
 uint8_t wspeed=0;//anguler speed
 uint8_t wflag=0;//2: counter-clock, 1: clock
 
+uint8_t openmv_instrction[7]={0};//instruction from openmv
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -378,11 +379,11 @@ void Alignment(double cmleft, double cmright)
     }
   }
   // Serial.print("Echoleft,right =");
-  // Serial.print(templeft);//串口输出等待时间的原始数�???
+  // Serial.print(templeft);//串口输出等待时间的原始数�???
   // Serial.print(",");
   // Serial.print(tempright);
   // Serial.print(" | | Distanceleft,right = ");
-  // Serial.print(cmleft);//串口输出距离换算成cm的结�???
+  // Serial.print(cmleft);//串口输出距离换算成cm的结�???
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
@@ -392,6 +393,9 @@ uint8_t hc12send(uint8_t data)
 } 
   
 
+uint8_t openmvreceive(void)
+{
+  return HAL_UART_Receive(&huart3, &openmv_instrction, 7, 100);
 }
 
 /* USER CODE END PFP */
