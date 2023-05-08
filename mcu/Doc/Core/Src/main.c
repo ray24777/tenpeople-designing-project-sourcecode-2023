@@ -34,6 +34,10 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+//for ATK process
+#define  UART_ENABLE_RE(USARTx)       USARTx.Instance->CR1|= (uint32_t)0x0004         
+#define  UART_DISABLE_RE(USARTx)      USARTx.Instance->CR1&= (~(uint32_t)0x0004)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -90,6 +94,9 @@ uint8_t wspeed=0;//anguler speed
 uint8_t wflag=0;//2: counter-clock, 1: clock
 
 uint8_t openmv_instrction[7]={0};//instruction from openmv
+
+float roll, pitch, yaw; // ATK Return Value
+float initial_Pitch; // ATK Return Value
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -400,6 +407,61 @@ uint8_t openmvreceive(void)
   return HAL_UART_Receive(&huart3, &openmv_instrction, 7, 100);
 }
 
+void ATKPrcess()// update ATK value
+{
+  int r = 0;
+  char ATKbuf[100];
+
+  UART_ENABLE_RE(huart1);
+  if (HAL_UART_Receive(&huart1, (uint8_t*)&ATKbuf, 30, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
+  {
+    UART_DISABLE_RE(huart1); //error
+    return;
+  } 
+  UART_DISABLE_RE(huart1);
+
+  char ATKframes[10];
+  for(r = 3; r<100; r++){ // Find the Report message
+    if((ATKbuf[r-3] == 0x55 && ATKbuf[r-2] == 0x55) && ATKbuf[r-1] == 0x01)
+    {
+      int i = 0, N = ATKbuf[r];
+      char * tmp = &ATKbuf[r+1];
+
+      uint8_t sum = 0x55 + 0x55 + 0x01 + N;  //checksum
+      for(i = 0; i < N; i++)
+      {
+        ATKframes[i] = tmp[i];
+        sum += tmp[i];
+      }
+
+      if(sum == tmp[i]) 
+      {
+        break; // if checksum pass 
+      }
+
+    }
+  }
+
+  if(r == 30) // Do not find the correct reply
+  {
+    return;
+  }
+
+  roll = (float)((int16_t)(ATKframes[1] << 8) | ATKframes[0]) / 32768 * 180;
+  pitch = (float)((int16_t)(ATKframes[3] << 8) | ATKframes[2]) / 32768 * 180;
+  yaw = (float)((int16_t)(ATKframes[5] << 8) | ATKframes[4]) / 32768 * 180;
+}
+
+void Set_angle(TIM_HandleTypeDef * htim,uint32_t Channel,uint8_t angle,uint32_t countPeriod,uint32_t CycleTime) 
+{
+	uint16_t compare_value=0;
+  if(angle<=180)
+  {
+    compare_value=0.5*countPeriod/CycleTime+angle*countPeriod/CycleTime/90; //compute the compare_value
+    __HAL_TIM_SET_COMPARE(htim, Channel, compare_value);
+	}
+}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -444,6 +506,9 @@ int main(void)
   MX_UART5_Init();
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
+
+  UART_DISABLE_RE(huart1);// DISABLE ATK uart first (otherwise MCU canot rev message from ATK, small feature here)
+
   /* USER CODE BEGIN 2 */
   //Load parameters to PID
   PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra,  20, 40, 1, _PID_P_ON_E, _PID_CD_DIRECT);
@@ -458,11 +523,22 @@ int main(void)
 
   //start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2); // Machine Arm: 0(normal) and 180(putting)
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3); // Bule servo(top): 90
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4); // Bule servo(openmv): 110(rectangle) and 65(45 degree)
   //start TIM5 IT left and right sensor
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
   HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
 
+  //Servo initial position
+  Set_angle(&htim1,TIM_CHANNEL_2, 0,20000,20);
+  Set_angle(&htim1,TIM_CHANNEL_3, 90,20000,20);
+  Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
+
+  //Recode initial Pitch
+  ATKPrcess();
+  initial_Pitch = pitch;
   printf("Initialized. \r\n");
   /* USER CODE END 2 */
 
