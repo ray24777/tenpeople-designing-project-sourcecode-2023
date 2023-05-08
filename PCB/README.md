@@ -21,14 +21,14 @@ Following the table for wiring.
 |PA0 |Ultrasonic sensor northeast|Echo |
 |PA1 |Ultrasonic sensors southeast|Echo|
 |PA11 |Ultrasonic sensors north|Echo|
-|PC12 |HC12|RX|
-|PD2  |HC12|TX|
-|PC10 |H7|B15(RX)|
-|PC11 |H7|TX|
-|PC4  |ATK-MS901M|RX|
-|PC5  |ATK-MS901M|TX|
-|PB10 |OpenMV|RX|
-|PB11 |OpenMV|TX|
+|PC12(UART5) |HC12|RX|
+|PD2 (UART5) |HC12|TX|
+|PC10 (UART4) |H7|B15(RX)|
+|PC11 (UART4) |H7|TX|
+|PC4(USART1)  |ATK-MS901M|RX|
+|PC5(USART1)  |ATK-MS901M|TX|
+|PB10(USART3) |OpenMV|RX|
+|PB11(USART3) |OpenMV|TX|
 
 ## H7
 
