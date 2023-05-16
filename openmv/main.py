@@ -6,7 +6,7 @@ from pyb import UART,Timer
 import micropython
 
 # 串口
-uart = UART(3, 115200, timeout_char = 1000)
+uart = UART(3, 115200, timeout_char = 1000) # 实例化
 
 # 初始化sensor.
 sensor.reset()
@@ -93,16 +93,21 @@ def line_patrol():
 
             if w>=0:
                 if -10<w<10:
-                    command = "151000"+str(abs(w))
+                    command = 'a'+'1'+'0'+str(abs(w))
                 else:
-                    command = "15100"+str(abs(w))
+                    command = 'a'+'1'+str(abs(w))
             else:
                 if -10<w<10:
-                    command = "151010"+str(abs(w))
+                    command = 'a'+'0'+'0'+str(abs(w))
                 else:
-                    command = "15101"+str(abs(w))
+                    command = 'a'+'0'+str(abs(w))
 
-            # 05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
+            # 发16进制数据
+            #code=[0x90,0x03,0x00,0x10,0x00,0x02,0xC5,0xCE]	# 要发送的数据列表
+            #uart.write(bytes(code))	# 发送该HEX数据
+
+            # 发字符串数据
+            # a 1 039: a起始 0代表左，1代表右 039代表角度
             uart.write(command)
             print("command: "+command)
 
