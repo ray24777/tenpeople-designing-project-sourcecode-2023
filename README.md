@@ -28,19 +28,35 @@ README：[go to this file](./Arduino/README.md)
 
 
 
+## 3D Design
+
+README：[go to this file](./3d_design/README.md)
+
+**TODO**
+
+- [x] OpenMv 云台固定件
+- [x] 超声波固定件
+- [x] 机械臂支撑台
+
+
+
 ## 主控
 
 README：[go to this file](./mcu/README.md)
 
 **TODO**
 - [x] 移植Arduino部分代码
-- [ ] 移植舵机部分代码
-- [ ] 移植通信模块部分代码
+- [x] 移植舵机部分代码
+- [x] 移植飞控（陀螺仪）代码
+- [X] 移植通信模块部分代码
 - [ ] 综合编程（是否使用RTOS？）
 - [ ] 测试
 
 
+## PCB
 
+Wiring: [go to this file](./PCB/README.md)
+目前统计了所有的接线方式，准备开始制作PCB
 ## 机械臂
 
 README：[go to this file](./Machine_Arm/README.md)
@@ -49,7 +65,7 @@ README：[go to this file](./Machine_Arm/README.md)
 - [x] 待部件到了连接舵机实现测试
 - [x] 第二版 3D 打印建模
 - [x] 总体搭建
-- [ ] 等待实机搭建，固定垫高平台
+- [x] 等待实机搭建，固定垫高平台
 
 
 ## 时间和通讯

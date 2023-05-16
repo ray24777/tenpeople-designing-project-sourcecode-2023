@@ -34,6 +34,10 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+//for ATK process
+#define  UART_ENABLE_RE(USARTx)       USARTx.Instance->CR1|= (uint32_t)0x0004         
+#define  UART_DISABLE_RE(USARTx)      USARTx.Instance->CR1&= (~(uint32_t)0x0004)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -89,6 +93,10 @@ uint8_t yflag=0;//2: right, 1: left
 uint8_t wspeed=0;//anguler speed
 uint8_t wflag=0;//2: counter-clock, 1: clock
 
+uint8_t openmv_instrction[7]={0};//instruction from openmv
+
+float roll, pitch, yaw; // ATK Return Value
+float initial_Pitch; // ATK Return Value
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -378,20 +386,80 @@ void Alignment(double cmleft, double cmright)
     }
   }
   // Serial.print("Echoleft,right =");
-  // Serial.print(templeft);//串口输出等待时间的原始数�??
+  // Serial.print(templeft);//串口输出等待时间的原始数�???
   // Serial.print(",");
   // Serial.print(tempright);
   // Serial.print(" | | Distanceleft,right = ");
-  // Serial.print(cmleft);//串口输出距离换算成cm的结�??
+  // Serial.print(cmleft);//串口输出距离换算成cm的结�???
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
+}
+
 uint8_t hc12send(uint8_t data)
 {
-  HAL_UART_Transmit(&uart5, &data, 1, 100);
+  return HAL_UART_Transmit(&huart5, &data, 1, 100);
 } 
   
 
+uint8_t openmvreceive(void)
+{
+  return HAL_UART_Receive(&huart3, &openmv_instrction, 7, 100);
+}
+
+void ATKPrcess()// update ATK value
+{
+  int r = 0;
+  char ATKbuf[100];
+
+  UART_ENABLE_RE(huart1);
+  if (HAL_UART_Receive(&huart1, (uint8_t*)&ATKbuf, 30, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
+  {
+    UART_DISABLE_RE(huart1); //error
+    return;
+  } 
+  UART_DISABLE_RE(huart1);
+
+  char ATKframes[10];
+  for(r = 3; r<100; r++){ // Find the Report message
+    if((ATKbuf[r-3] == 0x55 && ATKbuf[r-2] == 0x55) && ATKbuf[r-1] == 0x01)
+    {
+      int i = 0, N = ATKbuf[r];
+      char * tmp = &ATKbuf[r+1];
+
+      uint8_t sum = 0x55 + 0x55 + 0x01 + N;  //checksum
+      for(i = 0; i < N; i++)
+      {
+        ATKframes[i] = tmp[i];
+        sum += tmp[i];
+      }
+
+      if(sum == tmp[i]) 
+      {
+        break; // if checksum pass 
+      }
+
+    }
+  }
+
+  if(r == 30) // Do not find the correct reply
+  {
+    return;
+  }
+
+  roll = (float)((int16_t)(ATKframes[1] << 8) | ATKframes[0]) / 32768 * 180;
+  pitch = (float)((int16_t)(ATKframes[3] << 8) | ATKframes[2]) / 32768 * 180;
+  yaw = (float)((int16_t)(ATKframes[5] << 8) | ATKframes[4]) / 32768 * 180;
+}
+
+void Set_angle(TIM_HandleTypeDef * htim,uint32_t Channel,uint8_t angle,uint32_t countPeriod,uint32_t CycleTime) 
+{
+	uint16_t compare_value=0;
+  if(angle<=180)
+  {
+    compare_value=0.5*countPeriod/CycleTime+angle*countPeriod/CycleTime/90; //compute the compare_value
+    __HAL_TIM_SET_COMPARE(htim, Channel, compare_value);
+	}
 }
 
 /* USER CODE END PFP */
@@ -438,6 +506,9 @@ int main(void)
   MX_UART5_Init();
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
+
+  UART_DISABLE_RE(huart1);// DISABLE ATK uart first (otherwise MCU canot rev message from ATK, small feature here)
+
   /* USER CODE BEGIN 2 */
   //Load parameters to PID
   PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra,  20, 40, 1, _PID_P_ON_E, _PID_CD_DIRECT);
@@ -452,11 +523,22 @@ int main(void)
 
   //start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2); // Machine Arm: 0(normal) and 180(putting)
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3); // Bule servo(top): 90
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4); // Bule servo(openmv): 110(rectangle) and 65(45 degree)
   //start TIM5 IT left and right sensor
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
   HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
 
+  //Servo initial position
+  Set_angle(&htim1,TIM_CHANNEL_2, 0,20000,20);
+  Set_angle(&htim1,TIM_CHANNEL_3, 90,20000,20);
+  Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
+
+  //Recode initial Pitch
+  ATKPrcess();
+  initial_Pitch = pitch;
   printf("Initialized. \r\n");
   /* USER CODE END 2 */
 
@@ -482,26 +564,39 @@ int main(void)
         }
       }
     }
-
-    if(timel_fin==1 && timer_fin ==1)//if two counting is finished
-    {
-    Alignment(cml, cmr);
-    //   timel_fin=0;
-    //   timer_fin=0;
+//task2 codes
+    // if(timel_fin==1 && timer_fin ==1)//if two counting is finished
+    // {
+    // Alignment(cml, cmr);
+    // //   timel_fin=0;
+    // //   timer_fin=0;
+    // // }
+    // Forward(20);
+    // drive();
+    // toggleLD2(50);
     // }
-    Forward(20);
-    drive();
-    toggleLD2(50);
+
+
+    //test tracking 
+    Left(0);
+    if (openmvreceive==HAL_OK)
+    {
+      switch (openmv_instrction[4])
+      {
+        //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
+      case '0':
+        Turn_Left((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
+        break;
+      
+      case '1':
+        Turn_Right((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
+        break;
+      }
+      Forward(20);
+      drive();
     }
-  //   while(1)
-  //     {
-  //       Forward(10);
-  //       Right(0);
-  //       Turn_Left(0);
-  //       drive();
-  //       toggleLD2(200);
-  //     }
-    }
+
+  }
   /* USER CODE END 3 */
 }
 
@@ -848,6 +943,19 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.Pulse = 0;
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
@@ -1011,7 +1119,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LD2_Pin|Trig_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -1019,12 +1127,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD2_Pin Trig_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin|Trig_Pin;
+  /*Configure GPIO pin : LD2_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
