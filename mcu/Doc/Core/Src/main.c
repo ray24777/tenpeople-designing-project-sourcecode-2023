@@ -96,7 +96,9 @@ uint8_t wflag=0;//2: counter-clock, 1: clock
 uint8_t openmv_instrction[7]={0};//instruction from openmv
 
 float roll, pitch, yaw; // ATK Return Value
+int selfAngelint;
 float initial_Pitch; // ATK Return Value
+int initial_selfAngelint;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -407,25 +409,79 @@ uint8_t openmvreceive(void)
   return HAL_UART_Receive(&huart3, &openmv_instrction, 7, 100);
 }
 
+// void SendPC(char* InfoStr, int L)
+// {
+//   HAL_UART_Transmit(&huart5, (uint8_t*)InfoStr, L, HAL_MAX_DELAY);
+// }
+
+// void SendPCint(int dat) 
+// {
+//   char tmp[20];
+//   int i=0, flag = 0;
+//   for(i=0; i<20;i++)
+//   {
+//     tmp[i] = 0;
+//   }
+//   i = 0;
+//   if(dat < 0){
+//     dat = -dat;
+//     flag = 1;
+//   }
+//   else if (dat == 0)
+//   {
+//     tmp[i] = '0';
+//     i++;
+//   }
+//   while(dat)
+//   {
+//       tmp[i]=dat%10+0x30;
+//       i++;
+//       dat/=10;
+//   }
+//   if(flag)
+//   {
+//     tmp[i] = '-';
+//     i++;
+//   }
+  
+//   for(i=i-1; i>=0;i--)
+//   {
+//     SendPC(tmp + i, 1);
+//   }
+//   SendPC("\r\n", 2);
+// }
+
+int atkAngleRound(int a)
+{
+  return ((a + 360)%360);
+}
 void ATKPrcess()// update ATK value
 {
   int r = 0;
   char ATKbuf[100];
 
   UART_ENABLE_RE(huart1);
-  if (HAL_UART_Receive(&huart1, (uint8_t*)&ATKbuf, 30, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
+  if (HAL_UART_Receive(&huart1, (uint8_t*)ATKbuf, 30, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
   {
     UART_DISABLE_RE(huart1); //error
     return;
   } 
   UART_DISABLE_RE(huart1);
 
+  // char pp[] = "\x90\x90\x90\x90";
+  // SendPC(pp, 4);
+  // SendPC(ATKbuf, 30);
+
   char ATKframes[10];
-  for(r = 3; r<100; r++){ // Find the Report message
+  for(r = 3; r<30; r++){ // Find the Report message
     if((ATKbuf[r-3] == 0x55 && ATKbuf[r-2] == 0x55) && ATKbuf[r-1] == 0x01)
     {
       int i = 0, N = ATKbuf[r];
       char * tmp = &ATKbuf[r+1];
+      
+      // char pp[] = "\x90\x90\x90\x90";
+      // SendPC(pp, 4);
+      // SendPC(tmp, 8);
 
       uint8_t sum = 0x55 + 0x55 + 0x01 + N;  //checksum
       for(i = 0; i < N; i++)
@@ -449,7 +505,17 @@ void ATKPrcess()// update ATK value
 
   roll = (float)((int16_t)(ATKframes[1] << 8) | ATKframes[0]) / 32768 * 180;
   pitch = (float)((int16_t)(ATKframes[3] << 8) | ATKframes[2]) / 32768 * 180;
-  yaw = (float)((int16_t)(ATKframes[5] << 8) | ATKframes[4]) / 32768 * 180;
+  roll = (float)((int16_t)(ATKframes[5] << 8) | ATKframes[4]) / 32768 * 180;
+  selfAngelint = ((int)roll + 180) % 360;
+  // selfAngelint = ((int)pitch + 180) % 360;
+  // SendPC("Roll = ", 8);
+  // SendPCint(selfAngelint);
+  // char qwq[4];
+  // qwq[0] = (int)(selfAngelint/100) + '0'; 
+  // qwq[1] = (int)(selfAngelint/10)%10 + '0'; 
+  // qwq[2] = selfAngelint%10 + '0'; 
+  // qwq[3] = '\n';
+  // HAL_UART_Transmit(&huart5, qwq, 4, HAL_MAX_DELAY);
 }
 
 void Set_angle(TIM_HandleTypeDef * htim,uint32_t Channel,uint8_t angle,uint32_t countPeriod,uint32_t CycleTime) 
@@ -462,6 +528,81 @@ void Set_angle(TIM_HandleTypeDef * htim,uint32_t Channel,uint8_t angle,uint32_t 
 	}
 }
 
+int GetOpemMv() // Return Turn Angle
+{
+
+  int r = 0;
+  char Mvbuf[10];
+  char* frame;
+  int TurnAngle = 0;
+
+  UART_ENABLE_RE(huart3);
+  if (HAL_UART_Receive(&huart3, (uint8_t*)Mvbuf, 10, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
+  {
+    UART_DISABLE_RE(huart3); //error
+    return HAL_ERROR;
+  } 
+  UART_DISABLE_RE(huart3);
+
+  for(r=0; r<5;r++)
+  {
+    if(Mvbuf[r] == 'a')
+    {
+      frame = Mvbuf + r;
+      if (frame[1] == '1')
+      {
+        TurnAngle = (frame[2] - '0') * 100 + (frame[3] - '0') * 10 + (frame[4] - '0');
+        break;
+      }
+    }
+  }
+  if(Mvbuf[r] == 'a')
+    return TurnAngle;
+  return HAL_ERROR;
+}
+
+void turn_Angle(int angle, int direction)
+{
+  int aimAngle=0;
+  if(direction == 1)
+  {
+    ATKPrcess();
+    aimAngle = atkAngleRound(selfAngelint + angle);
+    Forward(0);
+    Left(0);
+    Turn_Right(200); //增大目前角度
+    drive();
+      // SendPCint(aimAngle);
+    while (selfAngelint >= atkAngleRound(aimAngle + 2) || selfAngelint <= atkAngleRound(aimAngle - 2))
+    {
+      toggleLD2(10);
+      ATKPrcess();
+      // SendPCint(aimAngle);
+    }
+  }
+  else if(direction == 2)
+  {
+    ATKPrcess();
+    aimAngle = atkAngleRound(selfAngelint - angle);
+    Forward(0);
+    Left(0);
+    Turn_Left(200);//减小目前角度
+    drive();
+    while (selfAngelint >= atkAngleRound(aimAngle + 2) || selfAngelint <= atkAngleRound(aimAngle - 2))
+    {
+      toggleLD2(10);
+      ATKPrcess();
+      // SendPCint(aimAngle);
+    }
+  }
+  
+  Forward(0);
+  Left(0);
+  Turn_Left(0);
+  drive();
+  toggleLD2(100);
+  return;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -508,6 +649,7 @@ int main(void)
   MX_USART3_UART_Init();
 
   UART_DISABLE_RE(huart1);// DISABLE ATK uart first (otherwise MCU canot rev message from ATK, small feature here)
+  UART_DISABLE_RE(huart3);
 
   /* USER CODE BEGIN 2 */
   //Load parameters to PID
@@ -539,6 +681,9 @@ int main(void)
   //Recode initial Pitch
   ATKPrcess();
   initial_Pitch = pitch;
+  initial_selfAngelint = selfAngelint;
+
+  int openmvAngle = 0;
   printf("Initialized. \r\n");
   /* USER CODE END 2 */
 
@@ -549,21 +694,21 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if(cmf<=5)
-    {
-      while(1)
-      {
-        Forward(0);
-        Left(0);
-        Turn_Left(0);
-        drive();
-        toggleLD2(100);
-        if (cmf>5)
-        {
-          break;
-        }
-      }
-    }
+    // if(cmf<=5)
+    // {
+    //   while(1)
+    //   {
+    //     Forward(0);
+    //     Left(0);
+    //     Turn_Left(0);
+    //     drive();
+    //     toggleLD2(100);
+    //     if (cmf>5)
+    //     {
+    //       break;
+    //     }
+    //   }
+    // }
 //task2 codes
     // if(timel_fin==1 && timer_fin ==1)//if two counting is finished
     // {
@@ -575,26 +720,39 @@ int main(void)
     // drive();
     // toggleLD2(50);
     // }
-
-
+    // Forward(0);
+    // Left(0);
+    // Turn_Left(0);
+    // drive();
+    // toggleLD2(100);
+    // while ()
+    // {
+    //   /* code */
+    // }
+    turn_Angle(90,1);
+    HAL_Delay(5000);
     //test tracking 
-    Left(0);
-    if (openmvreceive==HAL_OK)
-    {
-      switch (openmv_instrction[4])
-      {
-        //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
-      case '0':
-        Turn_Left((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
-        break;
+    // openmvAngle = GetOpemMv();
+    // if (openmvAngle != HAL_ERROR)
+    // {
+    // }
+    // Left(0);
+    // if (openmvreceive==HAL_OK)
+    // {
+    //   switch (openmv_instrction[4])
+    //   {
+    //     //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
+    //   case '0':
+    //     Turn_Left((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
+    //     break;
       
-      case '1':
-        Turn_Right((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
-        break;
-      }
-      Forward(20);
-      drive();
-    }
+    //   case '1':
+    //     Turn_Right((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
+    //     break;
+    //   }
+    //   Forward(20);
+    //   drive();
+    // }
 
   }
   /* USER CODE END 3 */
