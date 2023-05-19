@@ -10,8 +10,7 @@ README: [go to this file](./openmv/README.md)
 **TODO**
 
 - [x] 路面识别
-- [ ] 箭头识别
-- [ ] 箭头方向识别
+- [x] 箭头方向识别
 - [x] 数据传输：UART
 
 
