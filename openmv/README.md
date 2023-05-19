@@ -317,7 +317,7 @@ while(True):
 
 由于数据增强会导致左右箭头出现随机颠倒的情况，故没有进行。我们选择以0.001的学习率，60轮训练作为参数进行训练，获得了如下的效果：
 
-![image-20230519200330971](C:/Users/22437/AppData/Roaming/Typora/typora-user-images/image-20230519200330971.png)
+![image-20230519200330971](./assets/image-20230519200330971.png)
 
 最后，经过模型裁剪与量化，我们获得了可直接部署到OpenMV上的模型文件。
 
@@ -400,13 +400,13 @@ def identification_arrow():
 
 ## 模型效果展示
 
-![image-20230519200529926](C:/Users/22437/AppData/Roaming/Typora/typora-user-images/image-20230519200529926.png)
+![image-20230519200529926](./assets/image-20230519200529926.png)
 
-![image-20230519200612203](C:/Users/22437/AppData/Roaming/Typora/typora-user-images/image-20230519200612203.png)
+![image-20230519200612203](./assets/image-20230519200612203.png)
 
-![image-20230519200715197](C:/Users/22437/AppData/Roaming/Typora/typora-user-images/image-20230519200715197.png)
+![image-20230519200715197](./assets/image-20230519200715197.png)
 
-![image-20230519200737494](C:/Users/22437/AppData/Roaming/Typora/typora-user-images/image-20230519200737494.png)
+![image-20230519200737494](./assets/image-20230519200737494.png)
 
 可以看到，模型对不同角度和远近的箭头都能比较好地识别出位置并正确分类。
 
