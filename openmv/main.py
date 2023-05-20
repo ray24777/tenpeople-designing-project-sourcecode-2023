@@ -37,7 +37,7 @@ model = 1
 def line_patrol():
 
     clock.tick() # 追踪两个snapshots()之间经过的毫秒数.
-    img = sensor.snapshot() # 拍一张照片并返回图像。
+    img = sensor.snapshot().replace(vflip=True,hmirror=True) # 拍一张照片并返回图像。
 
     # 使用Canny边缘检测器 #threshold设置阈值
     img.find_edges(image.EDGE_CANNY, threshold=(60, 80))
@@ -142,7 +142,7 @@ def identification_arrow():
     clock.tick() #开始计时
     while(len(ARROW) <= num_arrow): # 识别到x次箭头后退出模型
 
-        img = sensor.snapshot()
+        img = sensor.snapshot().replace(vflip=True,hmirror=True)
     # detect() returns all objects found in the image (splitted out per class already)
     # we skip class index 0, as that is the background, and then draw circles of the center
     # of our objects
