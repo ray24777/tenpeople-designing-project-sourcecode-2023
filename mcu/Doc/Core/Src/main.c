@@ -570,7 +570,7 @@ void turn_Angle(int angle, int direction)
     aimAngle = atkAngleRound(selfAngelint + angle);
     Forward(0);
     Left(0);
-    Turn_Right(200); //增大目前角度
+    Turn_Right(100); //增大目前角度
     drive();
       // SendPCint(aimAngle);
     while (selfAngelint >= atkAngleRound(aimAngle + 2) || selfAngelint <= atkAngleRound(aimAngle - 2))
@@ -586,7 +586,7 @@ void turn_Angle(int angle, int direction)
     aimAngle = atkAngleRound(selfAngelint - angle);
     Forward(0);
     Left(0);
-    Turn_Left(200);//减小目前角度
+    Turn_Left(100);//减小目前角度
     drive();
     while (selfAngelint >= atkAngleRound(aimAngle + 2) || selfAngelint <= atkAngleRound(aimAngle - 2))
     {
