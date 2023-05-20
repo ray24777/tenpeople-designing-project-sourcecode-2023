@@ -1,60 +1,58 @@
-# Final Report
+# Architecture
 
-## Architecture
+## Abstract
 
-### Abstract
+## Task Analysis
 
-### Task Analysis
+## Top System
 
-### Top System
+## Sub Modules
 
-### Sub Modules
+### Chassis (Motors Control, Power, Battery)
 
-#### Chassis (Motors Control, Power, Battery)
+### Motor Controller (H7XX)
 
-#### Motor Controller (H7XX)
+### Ultrasonic sensors
 
-#### Ultrasonic sensors
+### Gyroscope
 
-#### Gyroscope
+### Servo
 
-#### Servo
+#### Robotic Arm
 
-##### Robotic Arm
+#### Gimbal Servo for OpenMV
 
-##### Gimbal Servo for OpenMV
+### Main Controller (G474)
 
-#### Main Controller (G474)
+#### Fence Alignment
 
-##### Fence Alignment
+#### Rotate with a given angle
 
-##### Rotate with a given angle
+### OpenMV Sensors
 
-#### OpenMV Sensors
+#### Arrow Identification
 
-##### Arrow Identification
+#### Gravel Path Tracking & Feedback
 
-##### Gravel Path Tracking & Feedback
+#### Communication with Main Controller
 
-##### Communication with Main Controller
+### PCB Design and Assembly
 
-#### PCB Design and Assembly
+## System Integration
 
-### System Integration
+### Bottom Layer: Motor Driver, Power, Battery
 
-#### Bottom Layer: Motor Driver, Power, Battery
+### Middle Layer: PCB, Main Controller, Motor Controller, Ultrasonic Sensors, etc.
 
-#### Middle Layer: PCB, Main Controller, Motor Controller, Ultrasonic Sensors, etc.
+### Top Layer: OpenMV, Gimbal, Robotic Arm
 
-#### Top Layer: OpenMV, Gimbal, Robotic Arm
+## Field Test Results (To Be Done after testing)
 
-### Field Test Results (To Be Done after testing)
+### Patio 1
 
-#### Patio 1
+### Patio 2
 
-#### Patio 2
-
-### Conclusion and Future Improvments
+## Conclusion and Future Improvments
 
 
 
