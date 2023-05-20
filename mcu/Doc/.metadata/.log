@@ -1,0 +1,18 @@
+!SESSION 2023-05-20 14:45:49.430 -----------------------------------------------
+eclipse.buildId=Version 1.12.1
+java.version=11.0.17
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Command-line arguments:  -data /home/ray/git/tdps2023/mcu/Doc -os linux -ws gtk -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2023-05-20 14:46:02.548
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2023-05-20 14:46:02.550
+!MESSAGE Log4j2 initialized with config file /home/ray/git/tdps2023/mcu/Doc/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2023-05-20 14:46:06.470
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2023-05-20 14:59:25.047
+!MESSAGE Indexed 'Doc' (23 sources, 85 headers) in 15.2 sec: 7,107 declarations; 51,406 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0034%)
