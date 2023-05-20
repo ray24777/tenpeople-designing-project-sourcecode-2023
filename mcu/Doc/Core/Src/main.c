@@ -531,10 +531,10 @@ void Set_angle(TIM_HandleTypeDef * htim,uint32_t Channel,uint8_t angle,uint32_t 
 int GetOpemMv() // Return Turn Angle
 {
 
-  int r = 0;
+  uint8_t r = 0;
   char Mvbuf[10];
   char* frame;
-  int TurnAngle = 0;
+  uint8_t TurnAngle = 0;
 
   UART_ENABLE_RE(huart3);
   if (HAL_UART_Receive(&huart3, (uint8_t*)Mvbuf, 10, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
@@ -694,6 +694,38 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  /****************TASK1******************/
+	  //follow the curve
+	   openmvAngle = GetOpemMv();
+	       if (openmvAngle != HAL_ERROR)
+	       {
+	       }
+	       Left(0);
+          int omega=(openmv_instrction[5]-30)*10+(openmv_instrction[6]-30);
+          if(omega <=10)
+          {
+            Left(0);
+          }
+          else
+          {
+            switch (openmv_instrction[4])
+            {
+              //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
+            case '0':
+              Turn_Left(omega);
+              break;
+
+            case '1':
+              Turn_Right(omega);
+              break;
+            }
+
+	        Forward(20);
+          toggleLD2(100);
+	        drive();
+         }
+	  /****************TASK1******************/
+
     // if(cmf<=5)
     // {
     //   while(1)
@@ -729,32 +761,12 @@ int main(void)
     // {
     //   /* code */
     // }
-    turn_Angle(90,1);
-    HAL_Delay(5000);
-    //test tracking 
-    // openmvAngle = GetOpemMv();
-    // if (openmvAngle != HAL_ERROR)
-    // {
-    // }
-    // Left(0);
-    // if (openmvreceive==HAL_OK)
-    // {
-    //   switch (openmv_instrction[4])
-    //   {
-    //     //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
-    //   case '0':
-    //     Turn_Left((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
-    //     break;
-      
-    //   case '1':
-    //     Turn_Right((openmv_instrction[5]-30)*10+(openmv_instrction[6]-30));
-    //     break;
-    //   }
-    //   Forward(20);
-    //   drive();
-    // }
+    //turn_Angle(90,1);
+    //HAL_Delay(5000);
 
   }
+
+  
   /* USER CODE END 3 */
 }
 
