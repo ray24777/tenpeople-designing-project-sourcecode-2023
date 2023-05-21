@@ -14,9 +14,9 @@ Following the table for wiring.
 |G474 GPIO Port  | Output Device  | Output Device Port  |
 |-----------|-----------|-----------|
 |RESET|Push Button|GND|
-|PC1 |Metal Servo|PWM|
-|PC2 |Blue Servo A|PWM|
-|PC3 |Blue Servo B|PWM|
+|PA15 |Metal Servo|PWM|
+|PA9 |Blue Servo A (top)|PWM|
+|PA10 |Blue Servo B (below)|PWM|
 |PC0 |Ultrasonic sensors (All)|Trig|
 |PA0 |Ultrasonic sensor northeast|Echo |
 |PA1 |Ultrasonic sensors southeast|Echo|
