@@ -53,6 +53,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
 
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
 
@@ -90,7 +91,7 @@ uint8_t xflag=0;//2: forward, 1: backward
 uint8_t yspeed=0;//speed of y axis
 uint8_t yflag=0;//2: right, 1: left
 
-uint8_t wspeed=0;//anguler speed
+uint16_t wspeed=0;//anguler speed
 uint8_t wflag=0;//2: counter-clock, 1: clock
 
 uint8_t openmv_instrction[7]={0};//instruction from openmv
@@ -112,6 +113,7 @@ static void MX_TIM4_Init(void);
 static void MX_UART5_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 //Redirect printf to UART
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
@@ -293,13 +295,13 @@ void Backward(uint8_t speed)
   xflag=1;
 }
 
-void Turn_Left(uint8_t speed)
+void Turn_Left(uint16_t speed)
 {
   wspeed=speed;
   wflag=2;
 }
 
-void Turn_Right(uint8_t speed)
+void Turn_Right(uint16_t speed)
 {
   wspeed=speed;
   wflag=1;
@@ -388,11 +390,11 @@ void Alignment(double cmleft, double cmright)
     }
   }
   // Serial.print("Echoleft,right =");
-  // Serial.print(templeft);//串口输出等待时间的原始数�???
+  // Serial.print(templeft);//串口输出等待时间的原始数�????????
   // Serial.print(",");
   // Serial.print(tempright);
   // Serial.print(" | | Distanceleft,right = ");
-  // Serial.print(cmleft);//串口输出距离换算成cm的结�???
+  // Serial.print(cmleft);//串口输出距离换算成cm的结�????????
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
@@ -461,7 +463,7 @@ void ATKPrcess()// update ATK value
   char ATKbuf[100];
 
   UART_ENABLE_RE(huart1);
-  if (HAL_UART_Receive(&huart1, (uint8_t*)ATKbuf, 30, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
+  if (HAL_UART_Receive(&huart1, (uint8_t*)ATKbuf, 20, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
   {
     UART_DISABLE_RE(huart1); //error
     return;
@@ -473,7 +475,7 @@ void ATKPrcess()// update ATK value
   // SendPC(ATKbuf, 30);
 
   char ATKframes[10];
-  for(r = 3; r<30; r++){ // Find the Report message
+  for(r = 3; r<20; r++){ // Find the Report message
     if((ATKbuf[r-3] == 0x55 && ATKbuf[r-2] == 0x55) && ATKbuf[r-1] == 0x01)
     {
       int i = 0, N = ATKbuf[r];
@@ -498,7 +500,7 @@ void ATKPrcess()// update ATK value
     }
   }
 
-  if(r == 30) // Do not find the correct reply
+  if(r == 20) // Do not find the correct reply
   {
     return;
   }
@@ -564,33 +566,108 @@ int GetOpemMv() // Return Turn Angle
 void turn_Angle(int angle, int direction)
 {
   int aimAngle=0;
+  int iniAngle=0;
+  uint8_t flag = 1; 
+  ATKPrcess();
+  iniAngle = selfAngelint;
+
   if(direction == 1)
   {
-    ATKPrcess();
-    aimAngle = atkAngleRound(selfAngelint + angle);
     Forward(0);
     Left(0);
-    Turn_Right(100); //增大目前角度
+    Turn_Right(600); //增大目前角度
     drive();
       // SendPCint(aimAngle);
-    while (selfAngelint >= atkAngleRound(aimAngle + 2) || selfAngelint <= atkAngleRound(aimAngle - 2))
+    while (1)
     {
-      toggleLD2(10);
+      // toggleLD2(10);
       ATKPrcess();
+      if (atkAngleRound(selfAngelint - iniAngle) >= 88 && atkAngleRound(selfAngelint - iniAngle) <= 92)
+        break;
+
+      if (atkAngleRound(selfAngelint - iniAngle) >= 45 && flag == 1)
+      {
+        flag = 0;
+        Forward(0);
+        Left(0);
+        Turn_Right(400); //增大目前角度
+        drive();
+
+      }
+      // SendPCint(aimAngle);
+    }
+  
+    Forward(0);
+    Left(0);
+    Turn_Left(0);
+    drive();
+    toggleLD2(100);
+
+    ATKPrcess();
+    if (atkAngleRound(selfAngelint - iniAngle) >=89 && atkAngleRound(selfAngelint - iniAngle) <= 91)
+      return;
+
+    Forward(0);
+    Left(0);
+    Turn_Left(150); //减小目前角度
+    drive();
+
+    while (1)
+    {
+      // toggleLD2(5);
+      if (atkAngleRound(selfAngelint - iniAngle) >=89 && atkAngleRound(selfAngelint - iniAngle) <= 91)
+        break;
+      ATKPrcess();
+        
       // SendPCint(aimAngle);
     }
   }
   else if(direction == 2)
   {
-    ATKPrcess();
-    aimAngle = atkAngleRound(selfAngelint - angle);
     Forward(0);
     Left(0);
-    Turn_Left(100);//减小目前角度
+    Turn_Left(600);//减小目前角度
     drive();
-    while (selfAngelint >= atkAngleRound(aimAngle + 2) || selfAngelint <= atkAngleRound(aimAngle - 2))
+
+    while (1)
     {
-      toggleLD2(10);
+      // toggleLD2(10);
+      ATKPrcess();
+      if (atkAngleRound(iniAngle - selfAngelint) >= 88 && atkAngleRound(iniAngle - selfAngelint) <= 92)
+        break;
+      if (atkAngleRound(iniAngle - selfAngelint) >= 45 && flag == 1)
+      {
+        flag = 0;
+        Forward(0);
+        Left(0);
+        Turn_Left(400); //增大目前角度
+        drive();
+
+      }
+      // SendPCint(aimAngle);
+    }
+
+    Forward(0);
+    Left(0);
+    Turn_Left(0);
+    drive();
+    toggleLD2(100);
+
+    ATKPrcess();
+
+    if (atkAngleRound(iniAngle - selfAngelint) >=89 && atkAngleRound(iniAngle - selfAngelint) <= 91)
+      return;
+
+    Forward(0);
+    Left(0);
+    Turn_Right(150); //增大目前角度
+    drive();
+    
+    while (1)
+    {
+      // toggleLD2(10);
+      if (atkAngleRound(iniAngle - selfAngelint) >=89 && atkAngleRound(iniAngle - selfAngelint) <= 91)
+        break;
       ATKPrcess();
       // SendPCint(aimAngle);
     }
@@ -647,10 +724,7 @@ int main(void)
   MX_UART5_Init();
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
-
-  UART_DISABLE_RE(huart1);// DISABLE ATK uart first (otherwise MCU canot rev message from ATK, small feature here)
-  UART_DISABLE_RE(huart3);
-
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   //Load parameters to PID
   PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra,  20, 40, 1, _PID_P_ON_E, _PID_CD_DIRECT);
@@ -665,18 +739,18 @@ int main(void)
 
   //start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2); // Machine Arm: 0(normal) and 180(putting)
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3); // Bule servo(top): 90
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4); // Bule servo(openmv): 110(rectangle) and 65(45 degree)
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // Machine Arm: 0(normal) and 180(putting)
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3); // Bule servo(top): 90
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4); // Bule servo(openmv): 110(rectangle) and 65(45 degree)
   //start TIM5 IT left and right sensor
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
   HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
 
   //Servo initial position
-  Set_angle(&htim1,TIM_CHANNEL_2, 0,20000,20);
-  Set_angle(&htim1,TIM_CHANNEL_3, 90,20000,20);
-  Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
+  Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
+  Set_angle(&htim2,TIM_CHANNEL_3, 90,20000,20);
+  Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
 
   //Recode initial Pitch
   ATKPrcess();
@@ -691,39 +765,59 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    
+    // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+    Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
+    // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
+    // Forward(0);
+    // Left(0);
+    // Turn_Left(0);
+    // drive();
+    toggleLD2(100);
+
+    HAL_Delay(5000);
+    Set_angle(&htim2,TIM_CHANNEL_1, 180,20000,20);
+    toggleLD2(100);
+
+    // turn_Angle(90, 1);
+
+    HAL_Delay(5000);
+    // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
+    // HAL_Delay(10000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	  /****************TASK1******************/
 	  //follow the curve
-	   openmvAngle = GetOpemMv();
-	       if (openmvAngle != HAL_ERROR)
-	       {
-	       }
-	       Left(0);
-          int omega=(openmv_instrction[5]-30)*10+(openmv_instrction[6]-30);
-          if(omega <=10)
-          {
-            Left(0);
-          }
-          else
-          {
-            switch (openmv_instrction[4])
-            {
-              //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
-            case '0':
-              Turn_Left(omega);
-              break;
+	  //  openmvAngle = GetOpemMv();
+	  //      if (openmvAngle != HAL_ERROR)
+	  //      {
+	  //      }
+	  //      Left(0);
+    //       int omega=(openmv_instrction[5]-30)*10+(openmv_instrction[6]-30);
+    //       if(omega <=10)
+    //       {
+    //         Left(0);
+    //       }
+    //       else
+    //       {
+    //         switch (openmv_instrction[4])
+    //         {
+    //           //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发�?�三个数：x,y,w
+    //         case '0':
+    //           Turn_Left(omega);
+    //           break;
 
-            case '1':
-              Turn_Right(omega);
-              break;
-            }
+    //         case '1':
+    //           Turn_Right(omega);
+    //           break;
+    //         }
 
-	        Forward(20);
-          toggleLD2(100);
-	        drive();
-         }
+	  //       Forward(20);
+    //       toggleLD2(100);
+	  //       drive();
+    //      }
 	  /****************TASK1******************/
 
     // if(cmf<=5)
@@ -1113,19 +1207,6 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.Pulse = 0;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
@@ -1147,6 +1228,73 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 169;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 19999;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 500;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+  HAL_TIM_MspPostInit(&htim2);
 
 }
 
