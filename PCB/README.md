@@ -29,6 +29,8 @@ Following the table for wiring.
 |PC5(USART1)  |ATK-MS901M|TX|
 |PB10(USART3) |OpenMV|RX|
 |PB11(USART3) |OpenMV|TX|
+|PB1 | Red LED|Red LED +|
+|PB2 | Green LED| Green LED +|
 
 ## H7
 
