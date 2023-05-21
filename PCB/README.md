@@ -14,9 +14,9 @@ Following the table for wiring.
 |G474 GPIO Port  | Output Device  | Output Device Port  |
 |-----------|-----------|-----------|
 |RESET|Push Button|GND|
-|PC1 |Metal Servo|PWM|
-|PC2 |Blue Servo A|PWM|
-|PC3 |Blue Servo B|PWM|
+|PA15 |Metal Servo|PWM|
+|PA9 |Blue Servo A (top)|PWM|
+|PA10 |Blue Servo B (below)|PWM|
 |PC0 |Ultrasonic sensors (All)|Trig|
 |PA0 |Ultrasonic sensor northeast|Echo |
 |PA1 |Ultrasonic sensors southeast|Echo|
@@ -29,6 +29,8 @@ Following the table for wiring.
 |PC5(USART1)  |ATK-MS901M|TX|
 |PB10(USART3) |OpenMV|RX|
 |PB11(USART3) |OpenMV|TX|
+|PB1 | Red LED|Red LED +|
+|PB2 | Green LED| Green LED +|
 
 ## H7
 
