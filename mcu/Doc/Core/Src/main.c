@@ -117,25 +117,14 @@ static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 //Redirect printf to UART
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+
 //define a function to toggle the LD2 LED in a certain pattern
-void toggleLD2(int delay) {
+void toggleLD2(uint32_t delay) {
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
   HAL_Delay(delay);
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin,GPIO_PIN_RESET);
   HAL_Delay(delay);
-
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-  HAL_Delay(2*delay);
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin,GPIO_PIN_RESET);
-  HAL_Delay(2*delay);
-
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-  HAL_Delay(delay);
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin,GPIO_PIN_RESET);
-  HAL_Delay(delay);
-
   //printf("Working\r\n");
-  
 }
 
 //interrupt handler for the timer
@@ -239,6 +228,19 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
           break;
     }
   } 
+}
+void toggleldr(uint32_t delay) {
+  HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
+  HAL_Delay(delay);
+  HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
+  HAL_Delay(delay);
+}
+
+void toggleldg(uint32_t delay) {
+  HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
+  HAL_Delay(delay);
+  HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
+  HAL_Delay(delay);
 }
 
 void drive ()
@@ -372,7 +374,7 @@ void Alignment(double cmleft, double cmright)
     }
     else
     {
-      Turn_Right((uint8_t)Outputultra);
+      Turn_Right((uint16_t)Outputultra);
       //print(Inputultra);
     }
   }
@@ -385,16 +387,16 @@ void Alignment(double cmleft, double cmright)
     }
     else
     {
-      Turn_Left((uint8_t)(-Outputultra));
+      Turn_Left((uint16_t)(-Outputultra));
       //print(Inputultra);
     }
   }
   // Serial.print("Echoleft,right =");
-  // Serial.print(templeft);//串口输出等待时间的原始数�????????
+  // Serial.print(templeft);//串口输出等待时间的原始数�?????????
   // Serial.print(",");
   // Serial.print(tempright);
   // Serial.print(" | | Distanceleft,right = ");
-  // Serial.print(cmleft);//串口输出距离换算成cm的结�????????
+  // Serial.print(cmleft);//串口输出距离换算成cm的结�?????????
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
@@ -767,21 +769,21 @@ int main(void)
   {
     
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-    Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
+    //Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
     // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
     // Forward(0);
     // Left(0);
     // Turn_Left(0);
     // drive();
-    toggleLD2(100);
+    //toggleLD2(100);
 
-    HAL_Delay(5000);
-    Set_angle(&htim2,TIM_CHANNEL_1, 180,20000,20);
-    toggleLD2(100);
+    //HAL_Delay(5000);
+    //Set_angle(&htim2,TIM_CHANNEL_1, 180,20000,20);
+    //toggleLD2(100);
 
     // turn_Angle(90, 1);
 
-    HAL_Delay(5000);
+    //HAL_Delay(5000);
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
     // HAL_Delay(10000);
@@ -820,31 +822,33 @@ int main(void)
     //      }
 	  /****************TASK1******************/
 
-    // if(cmf<=5)
-    // {
-    //   while(1)
-    //   {
-    //     Forward(0);
-    //     Left(0);
-    //     Turn_Left(0);
-    //     drive();
-    //     toggleLD2(100);
-    //     if (cmf>5)
-    //     {
-    //       break;
-    //     }
-    //   }
-    // }
-//task2 codes
-    // if(timel_fin==1 && timer_fin ==1)//if two counting is finished
-    // {
-    // Alignment(cml, cmr);
-    // //   timel_fin=0;
-    // //   timer_fin=0;
-    // // }
-    // Forward(20);
-    // drive();
-    // toggleLD2(50);
+
+    /****************TASK 2******************/
+     if(cmf<=5)
+         {
+           while(1)
+           {
+             Forward(0);
+             Left(0);
+             Turn_Left(0);
+             drive();
+             toggleLD2(100);
+             if (cmf>5)
+             {
+               break;
+             }
+           }
+         }
+     if(timel_fin==1 && timer_fin ==1)//if two counting is finished
+     {
+     Alignment(cml, cmr);
+     //   timel_fin=0;
+     //   timer_fin=0;
+     }
+     Forward(20);
+     drive();
+     toggleLD2(50);
+    /****************TASK1******************/
     // }
     // Forward(0);
     // Left(0);
@@ -1439,6 +1443,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, ldr_Pin|ldg_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -1451,6 +1458,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : ldr_Pin ldg_Pin */
+  GPIO_InitStruct.Pin = ldr_Pin|ldg_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
