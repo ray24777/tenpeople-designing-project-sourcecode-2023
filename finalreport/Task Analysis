@@ -1,0 +1,15 @@
+## Task Analysis
+
+### Patio 1
+
+To successfully accomplish tasks 1.1 and 1.3, the rover is required to navigate by following a path marked with colorful tiles and accurately identify the location of a gate where it needs to come to a stop. To achieve this, OpenMV, the visual system integrated into the rover, must possess advanced capabilities in visual identification and pavement processing. By analyzing the visual data captured by its sensors, OpenMV can determine the optimal route to follow, ensuring that the rover stays on track and reaches the designated gate accurately. 
+
+In the case of task 1.2, which involves locating and traversing a bridge, additional functionality is necessary. The rover needs to not only identify the presence of the bridge but also ensure proper alignment with both the bridge itself and its sidewall. To achieve this level of precision, three ultrasonic detectors are employed. These detectors emit sound waves that bounce off the bridge and its surroundings, allowing the rover to measure the distances and make necessary adjustments to align itself correctly. By leveraging the data gathered by the ultrasonic detectors, the rover can navigate across the bridge safely and confidently.
+
+### Patio 2
+
+To effectively tackle Task 2.1, which entails the recognition of arrow shapes and their corresponding directions, specific adjustments must be made to the OpenMV camera system installed in patio1. These modifications may involve fine-tuning the camera's image processing algorithms, enhancing its ability to accurately detect and classify arrow shapes, and determining their orientations. By implementing these enhancements, the OpenMV camera can provide reliable and precise information regarding the arrow shapes and the directions they indicate.
+
+Task 2.2 necessitates the successful completion of launching a tennis ball into a basket, which requires additional equipment in the form of a robotic arm integrated with a servo mechanism. The robotic arm plays a crucial role in precisely controlling the trajectory and force needed to propel the tennis ball towards the designated basket. By leveraging the servo mechanism, the robotic arm can achieve the necessary range of motion and accuracy to ensure the successful execution of this task. The coordination between the robotic arm and the servo mechanism allows for consistent and reliable ball launching, contributing to the overall efficiency of the operation.
+
+In Task 2.3, effective communication takes precedence. The primary objective revolves around establishing seamless communication between the rover and a laptop computer. This is accomplished through the utilization of a wireless transceiver, which enables the transmission of messages and data between the rover and the laptop. The wireless transceiver serves as the link that facilitates real-time and reliable communication, allowing the rover to transmit vital information, receive instructions, and provide status updates to the laptop computer.
