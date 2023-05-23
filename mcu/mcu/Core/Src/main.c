@@ -790,7 +790,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  /****************TASK1******************/
+	  /****************TASK 1******************/
 	  //follow the curve
 	  //  openmvAngle = GetOpemMv();
 	  //      if (openmvAngle != HAL_ERROR)
@@ -820,34 +820,107 @@ int main(void)
     //       toggleLD2(100);
 	  //       drive();
     //      }
-	  /****************TASK1******************/
+	  /****************TASK 1******************/
 
 
     /****************TASK 2******************/
-     if(cmf<=5)
-         {
-           while(1)
-           {
-             Forward(0);
-             Left(0);
-             Turn_Left(0);
-             drive();
-             toggleLD2(100);
-             if (cmf>5)
-             {
-               break;
-             }
-           }
-         }
-     if(timel_fin==1 && timer_fin ==1)//if two counting is finished
-     {
-     Alignment(cml, cmr);
-     //   timel_fin=0;
-     //   timer_fin=0;
-     }
-     Forward(20);
-     drive();
-     toggleLD2(50);
+    //  if(cmf<=5)
+    //      {
+    //        while(1)
+    //        {
+    //          Forward(0);
+    //          Left(0);
+    //          Turn_Left(0);
+    //          drive();
+    //          toggleLD2(100);
+    //          if (cmf>5)
+    //          {
+    //            break;
+    //          }
+    //        }
+    //      }
+
+    while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
+    {
+      //waiting for the counting to finish
+    }
+  
+    if (cml-cmr>50)//if the difference is too large, then turn right
+    {
+      //turn on the red led
+      HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
+
+      //move the vehicle to the front a bit
+      Forward(15);
+      Left(0);
+      Turn_Left(0);
+      drive();
+      HAL_Delay(1000);
+
+      //stop the vehicle
+      Forward(0);
+      Left(0);
+      Turn_Left(0);
+      drive();
+      HAL_Delay(500);
+
+      //turn right
+      turn_Angle(90,1);
+
+      //move the vehicle to the front a bit
+      Forward(15);
+      Left(0);
+      Turn_Left(0);
+      drive();
+      HAL_Delay(1000);
+
+      //finish the turning
+      HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
+      Forward(20);
+      drive();
+
+      toggleLD2(50);
+      continue;
+    }
+
+    if(cmf>5)//nothing in front
+    {
+      if((cml-cmr<3)||(cml-cmr>-3))//do nothing
+      {
+        Turn_Left(0);
+      }
+      else
+      {
+      Alignment(cml, cmr);
+      }
+      Forward(20);
+      drive();
+      toggleLD2(50);
+      continue;
+    }
+    else//turn left
+    {
+      //turn on the green led
+      HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
+
+      //turn left
+      turn_Angle(90,2);
+
+      //move the vehicle to the front a bit
+      Forward(15);
+      Left(0);
+      Turn_Left(0);
+      drive();
+      HAL_Delay(1000);
+
+      //finish the turning
+      HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
+      Forward(20);
+      drive();
+
+      toggleLD2(50);
+      continue;
+    }
     /****************TASK1******************/
     // }
     // Forward(0);
