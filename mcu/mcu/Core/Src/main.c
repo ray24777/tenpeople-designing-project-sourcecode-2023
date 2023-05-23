@@ -311,6 +311,7 @@ void Turn_Right(uint16_t speed)
 
 void Alignment(double cmleft, double cmright)
 {
+  cmleft+=3;
   printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cmleft, cmright);
   Inputultra = cmleft-cmright;
   Inputdistance = (cmleft + cmright) / 2;
@@ -803,9 +804,9 @@ int main(void)
     //Set_angle(&htim2,TIM_CHANNEL_1, 180,20000,20);
     //toggleLD2(100);
 
-    turn_Angle(60, 1);
+    //turn_Angle(60, 1);
 
-    HAL_Delay(5000);
+    //HAL_Delay(5000);
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
     // HAL_Delay(10000);
@@ -907,7 +908,7 @@ int main(void)
 
     if(cmf>5)//nothing in front
     {
-      if((cml-cmr<3)||(cml-cmr>-3))//do nothing
+      if((cml-cmr<3)&&(cml-cmr>-3))//do nothing
       {
         Turn_Left(0);
       }
