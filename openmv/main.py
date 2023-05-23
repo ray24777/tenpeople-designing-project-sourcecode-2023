@@ -89,15 +89,17 @@ def line_patrol():
                 w = line.theta()+90 -90
 
             if w>=0:
-                if -10<w<10:
-                    command = "151000"+str(abs(w))
-                else:
-                    command = "15100"+str(abs(w))
+                # if -10<w<10:
+                #     command = "151000"+str(abs(w))
+                command = "a1%03d" % (abs(w))
+                # else:
+                #     command = "15100"+str(abs(w))
             else:
-                if -10<w<10:
-                    command = "151010"+str(abs(w))
-                else:
-                    command = "15101"+str(abs(w))
+                command = "a2%03d" % (abs(w))
+                # if -10<w<10:
+                #     command = "151010"+str(abs(w))
+                # else:
+                #     command = "15101"+str(abs(w))
 
             # 05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
             uart.write(command)
@@ -178,6 +180,7 @@ def identification_arrow():
 
 ## 主循环
 while(True):
+    model = 0
     if model == 0:
         line_patrol()
     if model == 1:

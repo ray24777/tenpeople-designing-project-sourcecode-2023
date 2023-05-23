@@ -558,6 +558,11 @@ int GetOpemMv() // Return Turn Angle
         TurnAngle = (frame[2] - '0') * 100 + (frame[3] - '0') * 10 + (frame[4] - '0');
         break;
       }
+      else if (frame[1] == '2')
+      {
+        TurnAngle = (frame[2] - '0') * 100 + (frame[3] - '0') * 10 + (frame[4] - '0');
+        break;
+      }
     }
   }
   if(Mvbuf[r] == 'a')
