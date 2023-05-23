@@ -60,8 +60,13 @@ all: main-build
 main-build: mcu.elf secondary-outputs
 
 # Tool invocations
+<<<<<<< HEAD
 mcu.elf mcu.map: $(OBJS) $(USER_OBJS) /home/ray/git/tdps2023/mcu/mcu/STM32G474RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-gcc -o "mcu.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/ray/git/tdps2023/mcu/mcu/STM32G474RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="mcu.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+=======
+mcu.elf mcu.map: $(OBJS) $(USER_OBJS) D:\tmp\tdps2023\mcu\mcu\STM32G474RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "mcu.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\tmp\tdps2023\mcu\mcu\STM32G474RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="mcu.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+>>>>>>> f228c499520ddc9f0be302eced234ace66a342bd
 	@echo 'Finished building target: $@'
 	@echo ' '
 

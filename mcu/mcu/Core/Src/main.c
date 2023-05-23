@@ -577,102 +577,123 @@ void turn_Angle(int angle, int direction)
   {
     Forward(0);
     Left(0);
-    Turn_Right(600); //增大目前角度
-    drive();
-      // SendPCint(aimAngle);
-    while (1)
-    {
-      // toggleLD2(10);
-      ATKPrcess();
-      if (atkAngleRound(selfAngelint - iniAngle) >= 88 && atkAngleRound(selfAngelint - iniAngle) <= 92)
-        break;
-
-      if (atkAngleRound(selfAngelint - iniAngle) >= 45 && flag == 1)
-      {
-        flag = 0;
-        Forward(0);
-        Left(0);
-        Turn_Right(400); //增大目前角度
-        drive();
-
-      }
-      // SendPCint(aimAngle);
-    }
-
-    Forward(0);
-    Left(0);
-    Turn_Left(0);
-    drive();
-    toggleLD2(100);
-
-    ATKPrcess();
-    if (atkAngleRound(selfAngelint - iniAngle) >=89 && atkAngleRound(selfAngelint - iniAngle) <= 91)
-      return;
-
-    Forward(0);
-    Left(0);
-    Turn_Left(150); //减小目前角度
-    drive();
-
-    while (1)
-    {
-      // toggleLD2(5);
-      if (atkAngleRound(selfAngelint - iniAngle) >=89 && atkAngleRound(selfAngelint - iniAngle) <= 91)
-        break;
-      ATKPrcess();
-
-      // SendPCint(aimAngle);
-    }
-  }
-  else if(direction == 2)
-  {
-    Forward(0);
-    Left(0);
-    Turn_Left(600);//减小目前角度
+    Turn_Left(600); //增大目前角度
     drive();
 
     while (1)
     {
       // toggleLD2(10);
       ATKPrcess();
-      if (atkAngleRound(iniAngle - selfAngelint) >= 88 && atkAngleRound(iniAngle - selfAngelint) <= 92)
+      if (atkAngleRound(selfAngelint - iniAngle) == (angle-1) && atkAngleRound(selfAngelint - iniAngle) <= (angle+1))
         break;
-      if (atkAngleRound(iniAngle - selfAngelint) >= 45 && flag == 1)
+
+      if (atkAngleRound(selfAngelint - iniAngle) >= (angle/2) && atkAngleRound(selfAngelint - iniAngle) <= (angle+1) && flag == 1)
       {
-        flag = 0;
+        flag = 2;
         Forward(0);
         Left(0);
         Turn_Left(400); //增大目前角度
         drive();
 
       }
+      
+      if (atkAngleRound(selfAngelint - iniAngle) >= (angle+10) && flag == 2)
+      {
+        flag = 0;
+        Forward(0);
+        Left(0);
+        Turn_Right(200); //增大目前角度
+        drive();
+
+      }
+      printf("diff=%d, selfangle=%d \r\n", atkAngleRound(selfAngelint - iniAngle), selfAngelint);
       // SendPCint(aimAngle);
     }
 
+    // Forward(0);
+    // Left(0);
+    // Turn_Left(0);
+    // drive();
+    // toggleLD2(100);
+
+    // ATKPrcess();
+    // if (atkAngleRound(selfAngelint - iniAngle) >= (angle-1) && atkAngleRound(selfAngelint - iniAngle) <= (angle+1))
+    //   return;
+
+    // Forward(0);
+    // Left(0);
+    // Turn_Right(150); //减小目前角度
+    // drive();
+
+    // while (1)
+    // {
+    //   // toggleLD2(5);
+    //   if (atkAngleRound(selfAngelint - iniAngle) >= (angle-1) && atkAngleRound(selfAngelint - iniAngle) <= (angle+1))
+    //     break;
+    //   ATKPrcess();
+
+    //   // SendPCint(aimAngle);
+    // }
+  }
+  else if(direction == 2)
+  {
     Forward(0);
     Left(0);
-    Turn_Left(0);
-    drive();
-    toggleLD2(100);
-
-    ATKPrcess();
-
-    if (atkAngleRound(iniAngle - selfAngelint) >=89 && atkAngleRound(iniAngle - selfAngelint) <= 91)
-      return;
-
-    Forward(0);
-    Left(0);
-    Turn_Right(150); //增大目前角度
+    Turn_Right(600);//减小目前角度
     drive();
 
     while (1)
     {
       // toggleLD2(10);
-      if (atkAngleRound(iniAngle - selfAngelint) >=89 && atkAngleRound(iniAngle - selfAngelint) <= 91)
-        break;
       ATKPrcess();
-      // SendPCint(aimAngle);
+      if (atkAngleRound(iniAngle - selfAngelint) >= (angle-1) && atkAngleRound(iniAngle - selfAngelint) <= (angle+1))
+        break;
+      if (atkAngleRound(iniAngle - selfAngelint) >= (angle/2) && atkAngleRound(iniAngle - selfAngelint) <= (angle+1) && flag == 1)
+      {
+        flag = 2;
+        Forward(0);
+        Left(0);
+        Turn_Right(400); //增大目前角度
+        drive();
+      }
+
+      if (atkAngleRound(iniAngle - selfAngelint) >= (angle+10) && flag == 2)
+      {
+        
+        flag = 0;
+        Forward(0);
+        Left(0);
+        Turn_Left(200); //增大目前角度
+        drive();
+      }
+
+      printf("diff=%d, selfangle=%d \r\n", atkAngleRound(selfAngelint - iniAngle), selfAngelint);
     }
+
+    // Forward(0);
+    // Left(0);
+    // Turn_Right(0);
+    // drive();
+    // toggleLD2(100);
+
+    // ATKPrcess();
+
+    // if (atkAngleRound(iniAngle - selfAngelint) >= (angle-1) && atkAngleRound(iniAngle - selfAngelint) <= (angle+1))
+    //   return;
+
+    // Forward(0);
+    // Left(0);
+    // Turn_Left(150); //增大目前角度
+    // drive();
+
+    // while (1)
+    // {
+    //   // toggleLD2(10);
+    //   if (atkAngleRound(iniAngle - selfAngelint) >= (angle-1) && atkAngleRound(iniAngle - selfAngelint) <= (angle+1))
+    //     break;
+    //   ATKPrcess();
+    //   // SendPCint(aimAngle);
+    // }
   }
 
   Forward(0);
@@ -768,6 +789,7 @@ int main(void)
   while (1)
   {
 
+    /****************Test******************/
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
     //Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
     // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
@@ -781,9 +803,9 @@ int main(void)
     //Set_angle(&htim2,TIM_CHANNEL_1, 180,20000,20);
     //toggleLD2(100);
 
-    // turn_Angle(90, 1);
+    turn_Angle(60, 1);
 
-    //HAL_Delay(5000);
+    HAL_Delay(5000);
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
     // HAL_Delay(10000);
