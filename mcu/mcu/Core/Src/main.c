@@ -82,8 +82,15 @@ double Inputultra, Outputultra;
 double Setpointultra= 0;
 double Inputdistance, Outputdistance;
 double Setpointdistance= 20;
+
+double Inputopenmv, Outputopenmv;
+double Setpointopenmv=0;
+
 PID_TypeDef myPIDultra; //PID structure
 PID_TypeDef myPIDdistance; //PID structure
+
+PID_TypeDef myPIDopenmv; //PID structure
+
 
 uint8_t xspeed=0;//speed of x axis
 uint8_t xflag=0;//2: forward, 1: backward
@@ -510,8 +517,8 @@ void ATKPrcess()// update ATK value
 
   roll = (float)((int16_t)(ATKframes[1] << 8) | ATKframes[0]) / 32768 * 180;
   pitch = (float)((int16_t)(ATKframes[3] << 8) | ATKframes[2]) / 32768 * 180;
-  roll = (float)((int16_t)(ATKframes[5] << 8) | ATKframes[4]) / 32768 * 180;
-  selfAngelint = ((int)roll + 180) % 360;
+  yaw = (float)((int16_t)(ATKframes[5] << 8) | ATKframes[4]) / 32768 * 180;
+  selfAngelint = ((int)yaw + 180) % 360;
   // selfAngelint = ((int)pitch + 180) % 360;
   // SendPC("Roll = ", 8);
   // SendPCint(selfAngelint);
@@ -535,11 +542,12 @@ void Set_angle(TIM_HandleTypeDef * htim,uint32_t Channel,uint8_t angle,uint32_t 
 
 int GetOpemMv() // Return Turn Angle
 {
+  printf("ok\r\n");    
 
   uint8_t r = 0;
   char Mvbuf[10];
   char* frame;
-  uint8_t TurnAngle = 0;
+  int TurnAngle = 0;
 
   UART_ENABLE_RE(huart3);
   if (HAL_UART_Receive(&huart3, (uint8_t*)Mvbuf, 10, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
@@ -554,6 +562,7 @@ int GetOpemMv() // Return Turn Angle
     if(Mvbuf[r] == 'a')
     {
       frame = Mvbuf + r;
+      // printf("%s\r\n", frame);    
       if (frame[1] == '1')
       {
         TurnAngle = (frame[2] - '0') * 100 + (frame[3] - '0') * 10 + (frame[4] - '0');
@@ -561,7 +570,7 @@ int GetOpemMv() // Return Turn Angle
       }
       else if (frame[1] == '2')
       {
-        TurnAngle = (frame[2] - '0') * 100 + (frame[3] - '0') * 10 + (frame[4] - '0');
+        TurnAngle = -((frame[2] - '0') * 100 + (frame[3] - '0') * 10 + (frame[4] - '0'));
         break;
       }
     }
@@ -766,6 +775,11 @@ int main(void)
   PID_SetSampleTime(&myPIDdistance, 50);
   PID_SetOutputLimits(&myPIDdistance, -20, 20);
 
+  PID(&myPIDopenmv, &Inputopenmv, &Outputopenmv, &Setpointopenmv,  0.5, 1, 1.5, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID_SetMode(&myPIDopenmv, _PID_MODE_AUTOMATIC);
+  PID_SetSampleTime(&myPIDopenmv, 50);
+  PID_SetOutputLimits(&myPIDopenmv, -900, 900);
+
   //start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // Machine Arm: 0(normal) and 180(putting)
@@ -796,6 +810,8 @@ int main(void)
   {
 
     /****************Test******************/
+    turn_Angle(90, 1);
+    HAL_Delay(5000);
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
     //Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
     // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
@@ -820,136 +836,130 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  /****************TASK 1******************/
 	  //follow the curve
-	  //  openmvAngle = GetOpemMv();
-	  //      if (openmvAngle != HAL_ERROR)
-	  //      {
-	  //      }
+  //   if (PID_Compute(&myPIDdistance)==_FALSE)
+  //   printf("PID_Compute for distance error\r\n");
+
+  // printf("Outputdistance = %.3f\r\n", Outputdistance);
+//	  openmvAngle = GetOpemMv();
+//	  //openmvAngle=100;
+//    Inputopenmv=openmvAngle;
+//    if (openmvAngle != HAL_ERROR)
+//    {
+//      printf("openmvangle=%d\r\n", openmvAngle);
+//
+//      if (PID_Compute(&myPIDopenmv)==_FALSE)
+//        printf("PID_Compute for OpenMV error\r\n");
+//
+//      printf("Outputopenmv = %.3f\r\n", Outputopenmv);
+//
+//      if(Outputopenmv < 0)
+//      {
+//        Forward(5);
+//        Left(0);
+//        //Turn_Right(((openmvAngle/30) * 200) + 100);
+//        Turn_Right((int)Outputopenmv);
+//        drive();
+//        // toggleLD2(100);
+//      }
+//      else
+//      {
+//        Forward(5);
+//        Left(0);
+//        //Turn_Left(((-1 * openmvAngle/30) * 200) + 100);
+//        Turn_Left(-1 * (int)Outputopenmv);
+//        drive();
+//        // toggleLD2(100);
+//      }
+//      toggleLD2(100);
+//    }
 	  //      Left(0);
-    //       int omega=(openmv_instrction[5]-30)*10+(openmv_instrction[6]-30);
-    //       if(omega <=10)
-    //       {
-    //         Left(0);
-    //       }
-    //       else
-    //       {
-    //         switch (openmv_instrction[4])
-    //         {
-    //           //05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发�?�三个数：x,y,w
-    //         case '0':
-    //           Turn_Left(omega);
-    //           break;
-
-    //         case '1':
-    //           Turn_Right(omega);
-    //           break;
-    //         }
-
-	  //       Forward(20);
-    //       toggleLD2(100);
-	  //       drive();
-    //      }
 	  /****************TASK 1******************/
 
 
     /****************TASK 2******************/
-    //  if(cmf<=5)
-    //      {
-    //        while(1)
-    //        {
-    //          Forward(0);
-    //          Left(0);
-    //          Turn_Left(0);
-    //          drive();
-    //          toggleLD2(100);
-    //          if (cmf>5)
-    //          {
-    //            break;
-    //          }
-    //        }
-    //      }
 
-    while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
-    {
-      //waiting for the counting to finish
-    }
+    //  while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
+    //  {
+    //    //waiting for the counting to finish
+    //  }
   
-    if (cml-cmr>50)//if the difference is too large, then turn right
-    {
-      //turn on the red led
-      HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
+    //  if (cml-cmr>50)//if the difference is too large, then turn right
+    //  {
+    //    //turn on the red led
+    //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-      //move the vehicle to the front a bit
-      Forward(15);
-      Left(0);
-      Turn_Left(0);
-      drive();
-      HAL_Delay(1000);
+    //    //move the vehicle to the front a bit
+    //    Forward(15);
+    //    Left(0);
+    //    Turn_Left(0);
+    //    drive();
+    //    HAL_Delay(1000);
 
-      //stop the vehicle
-      Forward(0);
-      Left(0);
-      Turn_Left(0);
-      drive();
-      HAL_Delay(500);
+    //    //stop the vehicle
+    //    Forward(0);
+    //    Left(0);
+    //    Turn_Left(0);
+    //    drive();
+    //    HAL_Delay(500);
 
-      //turn right
-      turn_Angle(90,1);
+    //    //turn right
+    //    turn_Angle(90,2);
 
-      //move the vehicle to the front a bit
-      Forward(15);
-      Left(0);
-      Turn_Left(0);
-      drive();
-      HAL_Delay(1000);
+    //    //move the vehicle to the front a bit
+    //    Forward(15);
+    //    Left(0);
+    //    Turn_Left(0);
+    //    drive();
+    //    HAL_Delay(1000);
 
-      //finish the turning
-      HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-      Forward(20);
-      drive();
+    //    //finish the turning
+    //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
+    //    Forward(20);
+    //    drive();
 
-      toggleLD2(50);
-      continue;
-    }
+    //    toggleLD2(50);
+    //    continue;
+    //  }
 
-    if(cmf>5)//nothing in front
-    {
-      if((cml-cmr<3)&&(cml-cmr>-3))//do nothing
-      {
-        Turn_Left(0);
-      }
-      else
-      {
-      Alignment(cml, cmr);
-      }
-      Forward(20);
-      drive();
-      toggleLD2(50);
-      continue;
-    }
-    else//turn left
-    {
-      //turn on the green led
-      HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
+    //  if(cmf>10)//nothing in front
+    //  {
+    //    if((cml-cmr<3)&&(cml-cmr>-3))//do nothing
+    //    {
+    //      Turn_Left(0);
+    //    }
+    //    else
+    //    {
+    //    Alignment(cml, cmr);
+    //    }
+    //    Forward(20);
+    //    drive();
+    //    toggleLD2(50);
+    //    continue;
+    //  }
+    //  else//turn left
+    //  {
+    //    //turn on the green led
+    //    HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
 
-      //turn left
-      turn_Angle(90,2);
+    //    //turn left
+    //    turn_Angle(90,1);
 
-      //move the vehicle to the front a bit
-      Forward(15);
-      Left(0);
-      Turn_Left(0);
-      drive();
-      HAL_Delay(1000);
+    //    //move the vehicle to the front a bit
+    //    Forward(15);
+    //    Left(0);
+    //    Turn_Left(0);
+    //    drive();
+    //    HAL_Delay(1000);
 
-      //finish the turning
-      HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
-      Forward(20);
-      drive();
+    //    //finish the turning
+    //    HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
+    //    Forward(20);
+    //    drive();
 
-      toggleLD2(50);
-      continue;
-    }
-    /****************TASK1******************/
+    //    toggleLD2(50);
+    //    continue;
+    //  }
+    /****************TASK 2******************/
     // }
     // Forward(0);
     // Left(0);
