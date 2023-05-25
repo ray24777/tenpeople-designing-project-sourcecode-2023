@@ -1,16 +1,16 @@
-import sensor, image, time, os, tf, math, uos, gc
+import sensor, image, time,math
 from pyb import UART,Timer
 import micropython
 
 # 串口
-uart = UART(3, 115200, timeout_char = 1000)
+uart = UART(3, 115200, timeout_char = 1000) # 实例化
 
 # 初始化sensor.
 sensor.reset()
 
 sensor.set_pixformat(sensor.GRAYSCALE) # or sensor.RGB565 设置图像颜色
 
-sensor.set_framesize(sensor.VGA) # or sensor.QVGA (or others) 设置图像像素大小
+sensor.set_framesize(sensor.QVGA) # or sensor.QVGA (or others) 设置图像像素大小
 
 sensor.skip_frames(30) # 跳过一定帧 让新的设置生效
 
@@ -20,94 +20,105 @@ sensor.set_gainceiling(8) # 设置相机图像增益上限
 clock = time.clock()
 
 # 设置使用模型
-model = 1
+model = 0
 
-#def a_func():
-    #global command
-    #uart.write(command+'xxx'+'\n')
 
-## 定时器
-#timer = Timer(4)
-#timer.init(freq=2)
-#timer.callback(lambda t: a_func())
+### 模型0：巡线------------------------------------------------------------------------------------------
+# 定义一个函数，用于计算每行的质心，并且如果一行的质心与其他行的质心相差不大，则将其合并，相差大则不合并
+def compute_rows_centroids(img, max_diff=50, num_neighbours=2):
+    centroids = []
+    width, height = img.width(), img.height()
+    for row in range(height):
+        sum_x, count = 0, 0
+        for col in range(width):
+            if img.get_pixel(col, row) > 0:
+                sum_x += col
+                count += 1
 
-#------------------------------------------------------------------------------------------#
+        if count > 0:
+            centroid_x = sum_x // count
+            centroid = (centroid_x, row, count)
+            if len(centroids) >= num_neighbours:  # 检查是否有足够的相邻质心
+                neighbour_sum = 0
+                num_valid_neighbours = 0
+                for i in range(1, num_neighbours + 1):
+                    if centroids[-i] is not None:
+                        neighbour_sum += centroids[-i][0]
+                        num_valid_neighbours += 1
 
-## 模型0：巡线
+                if num_valid_neighbours > 0:
+                    avg_neighbour = neighbour_sum // num_valid_neighbours
+                    if abs(centroid_x - avg_neighbour) <= max_diff:  # 和相邻质心偏差不大
+                        centroids.append(centroid)
+                    else:
+                        centroids.append(None)
+                else:
+                    centroids.append(centroid)
+            else:
+                centroids.append(centroid)
+        else:
+            centroids.append(None)
+    return centroids
+
+# 定义一个函数，用于判断直线是否接近垂直
+def is_vertical_line(line, tolerance=30):
+    theta = line.theta()
+    return abs(theta) <= tolerance or abs(theta - 180) <= tolerance
+
+# 定义巡线主函数
 def line_patrol():
 
-    clock.tick() # 追踪两个snapshots()之间经过的毫秒数.
-    img = sensor.snapshot().replace(vflip=True,hmirror=True) # 拍一张照片并返回图像。
+    # 追踪两个snapshots()之间经过的毫秒数.
+    clock.tick()
+
+    # 从sensor中获取图像，180度翻转
+    img = sensor.snapshot().replace(vflip=True,hmirror=True)
+
+    # 二值化图像
+    img = img.binary([(120,255)],invert=False)
 
     # 使用Canny边缘检测器 #threshold设置阈值
-    img.find_edges(image.EDGE_CANNY, threshold=(60, 80))
+    img.find_edges(image.EDGE_CANNY, threshold=(70, 150))
 
     # 消噪
-    img.mean(5)
+    #img.mean(2)
 
     # 池化
-    img = img.mean_pool(10,10)
+    img = img.mean_pool(2,2)
 
-    # 二值化图像   #自适应二值化
-    img_statistics = img.get_statistics()
-    max_value = img_statistics.max()
-    uq_value = img_statistics.uq()
-    #print(max_value,uq_value)
+    # 计算每一行的质心
+    rows_centroids = compute_rows_centroids(img)
 
-    img = img.binary([(uq_value,max_value)],invert=False)
+    # 画出质心
+    for centroid in rows_centroids:
+        if centroid is not None:
+            img.draw_rectangle(centroid[0], centroid[1], math.floor(centroid[2]/5), math.floor(centroid[2]/5),color=255)
 
-    # 侵蚀
-    #img.erode(1)
-
-    # 扩张
-    img.dilate(3)
-
-    # 划线（霍夫变换）
-    line = img.get_regression([(255,255)], robust = True)
+    ## 划线
+    line = img.get_regression([(150,255)], robust = True)
     #(255,255):追踪的颜色范围：纯白色
     #robust = True:使用Theil-Sen线性回归算法
-    if (line):#如果存在符合要求的直线
-            rho_err = abs(line.rho())-img.width()/2
-                #rho_err:负值直线在左侧正值在右侧若为水平线的中垂线则为0
-                #line.rho():通过霍夫变换拟合出直线相对于原点的距离(像素数)(即r=xcosθ+ysinθ中的r)
-                #img.width():以像素计图像的宽度
-            if line.theta()>90:
-                #line.theta():0-90 Y+半轴和直线的夹角,90-180 Y-半轴和直线的夹角
-                theta_err = line.theta()-180
-            else:
-                theta_err = line.theta()
-                #处理后:绝对值为直线同Y+轴的夹角,右正左负
-            img.draw_line(line.line(), color = 127)
-            # print(rho_err,line.rho(),line.magnitude(),line.theta(),theta_err)
-            # line.magnitude():霍夫变换后所得直线的模
+    if (line):
+        rho_err = abs(line.rho())-img.width()/2
+        if line.theta()>90:
+            theta_err = line.theta()-180
+        else:
+            theta_err = line.theta()
+        img.draw_line(line.line(), color = 127)
+        if line.theta() >= 90:
+            w = line.theta()-90 -90
+        else:
+            w = line.theta()+90 -90
+        if w>=0:
+            w = w+10
+            command = "a1%03d" % (abs(w))
+        else:
+            w = w-10
+            command = "a2%03d" % (abs(w))
+        uart.write(command)
+        print("command: "+command)
 
-            # w：角度的，左偏为正，右偏为负,
-            # print(str(line.theta()))
-            if line.theta() >= 90:
-                w = line.theta()-90 -90
-            else:
-                w = line.theta()+90 -90
-
-            if w>=0:
-                # if -10<w<10:
-                #     command = "151000"+str(abs(w))
-                command = "a1%03d" % (abs(w))
-                # else:
-                #     command = "15100"+str(abs(w))
-            else:
-                command = "a2%03d" % (abs(w))
-                # if -10<w<10:
-                #     command = "151010"+str(abs(w))
-                # else:
-                #     command = "15101"+str(abs(w))
-
-            # 05 00 013: 0代表负\左，1代表正\右，第一位是符号位，发送三个数：x,y,w
-            uart.write(command)
-            print("command: "+command)
-
-#------------------------------------------------------------------------------------------#
-
-## 模型1：箭头检测
+### 模型1：箭头识别------------------------------------------------------------------------------------------
 def identification_arrow():
     sensor.reset()                         # Reset and initialize the sensor.
     sensor.set_pixformat(sensor.RGB565)    # Set pixel format to RGB565
@@ -180,7 +191,6 @@ def identification_arrow():
 
 ## 主循环
 while(True):
-    model = 0
     if model == 0:
         line_patrol()
     if model == 1:
