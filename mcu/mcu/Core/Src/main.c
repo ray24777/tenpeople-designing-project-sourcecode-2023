@@ -421,48 +421,6 @@ uint8_t openmvreceive(void)
   return HAL_UART_Receive(&huart3, &openmv_instrction, 7, 100);
 }
 
-// void SendPC(char* InfoStr, int L)
-// {
-//   HAL_UART_Transmit(&huart5, (uint8_t*)InfoStr, L, HAL_MAX_DELAY);
-// }
-
-// void SendPCint(int dat)
-// {
-//   char tmp[20];
-//   int i=0, flag = 0;
-//   for(i=0; i<20;i++)
-//   {
-//     tmp[i] = 0;
-//   }
-//   i = 0;
-//   if(dat < 0){
-//     dat = -dat;
-//     flag = 1;
-//   }
-//   else if (dat == 0)
-//   {
-//     tmp[i] = '0';
-//     i++;
-//   }
-//   while(dat)
-//   {
-//       tmp[i]=dat%10+0x30;
-//       i++;
-//       dat/=10;
-//   }
-//   if(flag)
-//   {
-//     tmp[i] = '-';
-//     i++;
-//   }
-
-//   for(i=i-1; i>=0;i--)
-//   {
-//     SendPC(tmp + i, 1);
-//   }
-//   SendPC("\r\n", 2);
-// }
-
 int atkAngleRound(int a)
 {
   return ((a + 360)%360);
@@ -722,11 +680,12 @@ void turn_Angle(int angle, int direction)
       if (avgAngle >= (angle+10) && flag == 2)
       {
         
-        flag = 0;
-        Forward(0);
-        Left(0);
-        Turn_Left(200); //增大目前角度
-        drive();
+//        flag = 0;
+//        Forward(0);
+//        Left(0);
+//        Turn_Left(200); //增大目前角度
+//        drive();
+    	  break;
       }
       printf("diff=%d, selfangle=%d, avgAngle=%d \r\n", atkAngleRound(iniAngle- selfAngelint), selfAngelint, avgAngle);
       // printf("diff=%d, selfangle=%d \r\n", atkAngleRound(selfAngelint - iniAngle), selfAngelint);
@@ -840,7 +799,8 @@ int main(void)
   //Servo initial position
   Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
   Set_angle(&htim2,TIM_CHANNEL_3, 90,20000,20);
-  Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
+  // Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
+  Set_angle(&htim2,TIM_CHANNEL_4, 60,20000,20);
 
   //Recode initial Pitch
   ATKPrcess();
@@ -857,17 +817,24 @@ int main(void)
   {
 
     /****************Test******************/
-    turn_Angle(45, 2);
+    // Set_angle(&htim2,TIM_CHANNEL_4, 65,20000,20);
     // turn_Angle(45, 2);
-    HAL_Delay(5000);
+     turn_Angle(90, 2);
+     HAL_Delay(5000);
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
     // Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
     // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
-    // Forward(30);
+//    Forward(10);
+//    Left(0);
+//    Turn_Left(0);
+//    drive();
+//    toggleLD2(1000);
+
+    // Forward(0);
     // Left(0);
     // Turn_Left(0);
     // drive();
-    // toggleLD2(100);
+    // toggleLD2(1000);
 
     // HAL_Delay(5000);
     // Set_angle(&htim2,TIM_CHANNEL_1, 150,20000,20);
@@ -890,31 +857,34 @@ int main(void)
   // printf("Outputdistance = %.3f\r\n", Outputdistance);
 //	  openmvAngle = GetOpemMv();
 //	  //openmvAngle=100;
-//    Inputopenmv=openmvAngle;
+//  //  Inputopenmv=openmvAngle;
 //    if (openmvAngle != HAL_ERROR)
 //    {
 //      printf("openmvangle=%d\r\n", openmvAngle);
 //
-//      if (PID_Compute(&myPIDopenmv)==_FALSE)
-//        printf("PID_Compute for OpenMV error\r\n");
+//      //  if (PID_Compute(&myPIDopenmv)==_FALSE)
+//      //    printf("PID_Compute for OpenMV error\r\n");
 //
-//      printf("Outputopenmv = %.3f\r\n", Outputopenmv);
+//      //  printf("Outputopenmv = %.3f\r\n", Outputopenmv);
 //
-//      if(Outputopenmv < 0)
+//      if(openmvAngle > 0)
 //      {
-//        Forward(5);
+//        Forward(9);
 //        Left(0);
-//        //Turn_Right(((openmvAngle/30) * 200) + 100);
-//        Turn_Right((int)Outputopenmv);
+//        if(openmvAngle>20)
+//          Turn_Right((int) ((openmvAngle/30) * 450) + 100);
+//        else
+//          Turn_Right((int) ((openmvAngle/30) * 400) + 100);
+//        //  Turn_Right((int)Outputopenmv);
 //        drive();
 //        // toggleLD2(100);
 //      }
 //      else
 //      {
-//        Forward(5);
+//        Forward(8);
 //        Left(0);
-//        //Turn_Left(((-1 * openmvAngle/30) * 200) + 100);
-//        Turn_Left(-1 * (int)Outputopenmv);
+//        Turn_Left((int) ((-1 * openmvAngle/30) * 400) + 100);
+//        //  Turn_Left(-1 * (int)Outputopenmv);
 //        drive();
 //        // toggleLD2(100);
 //      }
