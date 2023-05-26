@@ -323,49 +323,61 @@ void Alignment(double cmleft, double cmright)
   Inputultra = cmleft-cmright;
   Inputdistance = (cmleft + cmright) / 2;
 
-  if (PID_Compute(&myPIDdistance)==_FALSE)
-    printf("PID_Compute for distance error\r\n");
+  //if (PID_Compute(&myPIDdistance)==_FALSE)
+  //  printf("PID_Compute for distance error\r\n");
 
-  printf("Outputdistance = %.3f\r\n", Outputdistance);
+  //printf("Outputdistance = %.3f\r\n", Outputdistance);
   //myPIDdistance.Compute();
-
-  if(Outputdistance < 0)//if there is a need to move closer to wall
-  {
-    if(Inputdistance < 21)//but the actual distance is not that far
+    if(Inputdistance < 15)
     {
-      //do nothing
-      //println(Inputdistance);
-      //println(Outputdistance);
-      //allstop();?
-      Left(0);
-    }
-    else
-    {
-      //move far from the wall
-      printf("Too far from wall\r\n");
-      Left((uint8_t)(-Outputdistance));
-      // println(Inputdistance);
-      // println(Outputdistance);
-    }
-  }
-  else
-  {//if there is a need to move far from the wall
-    if(Inputdistance > 19)//but the actual distance is not that close
-    {
-      //do nothing
-      // println(Inputdistance);
-      // println(Outputdistance);
-      //allstop();
-      Right(0);
-    }
-    else
-    {
+      //go left
       printf("Too close to wall\r\n");
-      Right((uint8_t)Outputdistance);
-      // println(Inputdistance);
-      // println(Outputdistance);
+      HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
+      for(uint8_t i =0; i<=4;i++)
+      {
+      Forward(10);
+      Turn_Left(10);
+      drive();
+      HAL_Delay(500);
+      }
+      for(uint8_t i =0; i<=1;i++)
+      {
+      Forward(10);
+      Turn_Left(0);
+      drive();
+      HAL_Delay(500);
+      }
+      HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
     }
-  }
+    else
+    {
+      if(Inputdistance > 30)
+      {
+        //go right
+        printf("Too far from wall\r\n");
+        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
+        for(uint8_t i =0; i<=4;i++)
+        {
+        Forward(10);
+        Turn_Right(10);
+        drive();
+        HAL_Delay(500);
+        }
+        for(uint8_t i =0; i<=1;i++)
+        {
+        Forward(10);
+        Turn_Right(0);
+        drive();
+        HAL_Delay(500);
+        }
+        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
+      }
+      else
+      {
+        Turn_Left(0);
+      }   
+    }
+  
 
   if (PID_Compute(&myPIDultra)==_FALSE)
     printf("PID_Compute for ultra error\r\n");
@@ -906,9 +918,9 @@ int main(void)
     //    //turn on the red led
     //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-    //    //move the vehicle to the front a bit
+    //    //move the vehicle to the ldrfront a bit
     //    Forward(15);
-    //    Left(0);
+    //    Left(0);ldr
     //    Turn_Left(0);
     //    drive();
     //    HAL_Delay(1000);
