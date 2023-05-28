@@ -295,25 +295,39 @@ void Left(uint8_t speed)
 void Forward(uint8_t speed)
 {
   xspeed=speed;
+  yspeed=speed;
   xflag=2;
+  yflag=2;
 }
 
 void Backward(uint8_t speed)
 {
   xspeed=speed;
+  yspeed=speed;
   xflag=1;
+  yflag=1;
 }
 
 void Turn_Left(uint16_t speed)
 {
-  wspeed=speed;
-  wflag=2;
+  xspeed=xspeed-speed;
+  yspeed=xspeed+speed;
+  wflag=0;
+  if (xspeed<0)
+  {
+    xflag=1;
+  }
 }
 
 void Turn_Right(uint16_t speed)
 {
-  wspeed=speed;
+  xspeed=xspeed+speed;
+  yspeed=xspeed-speed;
   wflag=1;
+  if (yspeed<0)
+  {
+    yflag=1;
+  }
 }
 
 void Alignment(double cmleft, double cmright)
@@ -565,9 +579,13 @@ void turn_Angle(int angle, int direction)
 
   if(direction == 1)
   {
-    Forward(0);
-    Left(0);
-    Turn_Left(300); //增大目前角度
+    // Forward(0);
+    // Left(0);
+    // Turn_Left(300); //增大目前角度
+    // drive();
+
+    Forward(10);
+    xflag=2;
     drive();
 
     ATKPrcess();
@@ -648,11 +666,14 @@ void turn_Angle(int angle, int direction)
   }
   else if(direction == 2)
   {
-    Forward(0);
-    Left(0);
-    Turn_Right(300);//减小目前角度
+    // Forward(0);
+    // Left(0);
+    // Turn_Right(300);//减小目前角度
+    // drive();
+    Forward(10);
+    yflag=2;
     drive();
-    
+
     ATKPrcess();
     iniAngle = selfAngelint;
     comAngle[n] = atkAngleRound(iniAngle - selfAngelint);
@@ -831,8 +852,8 @@ int main(void)
     /****************Test******************/
     // Set_angle(&htim2,TIM_CHANNEL_4, 65,20000,20);
     // turn_Angle(45, 2);
-     turn_Angle(90, 2);
-     HAL_Delay(5000);
+    //turn_Angle(90, 2);
+    //HAL_Delay(5000);
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
     // Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
     // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
@@ -908,87 +929,88 @@ int main(void)
 
     /****************TASK 2******************/
 
-    //  while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
-    //  {
-    //    //waiting for the counting to finish
-    //  }
+     while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
+     {
+       //waiting for the counting to finish
+     }
   
-    //  if (cml-cmr>50)//if the difference is too large, then turn right
-    //  {
-    //    //turn on the red led
-    //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
+     if (cml-cmr>50)//if the difference is too large, then turn right
+     {
+       //turn on the red led
+       HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-    //    //move the vehicle to the ldrfront a bit
-    //    Forward(15);
-    //    Left(0);ldr
-    //    Turn_Left(0);
-    //    drive();
-    //    HAL_Delay(1000);
+       //move the vehicle to the ldrfront a bit
+       Forward(15);
+       Left(0);
+       Turn_Left(0);
+       drive();
+       HAL_Delay(1000);
 
-    //    //stop the vehicle
-    //    Forward(0);
-    //    Left(0);
-    //    Turn_Left(0);
-    //    drive();
-    //    HAL_Delay(500);
+       //stop the vehicle
+       Forward(0);
+       Left(0);
+       Turn_Left(0);
+       drive();
+       HAL_Delay(500);
 
-    //    //turn right
-    //    turn_Angle(90,2);
+       //turn right
+       turn_Angle(90,2);
 
-    //    //move the vehicle to the front a bit
-    //    Forward(15);
-    //    Left(0);
-    //    Turn_Left(0);
-    //    drive();
-    //    HAL_Delay(1000);
+       //move the vehicle to the front a bit
+       Forward(15);
+       Left(0);
+       Turn_Left(0);
+       drive();
+       HAL_Delay(1000);
 
-    //    //finish the turning
-    //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-    //    Forward(20);
-    //    drive();
+       //finish the turning
+       HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
+       Forward(20);
+       drive();
 
-    //    toggleLD2(50);
-    //    continue;
-    //  }
+       toggleLD2(50);
+       continue;
+     }
 
-    //  if(cmf>10)//nothing in front
-    //  {
-    //    if((cml-cmr<3)&&(cml-cmr>-3))//do nothing
-    //    {
-    //      Turn_Left(0);
-    //    }
-    //    else
-    //    {
-    //     Alignment(cml, cmr);
-    //    }
-    //    Forward(20);
-    //    drive();
-    //    toggleLD2(50);
-    //    continue;
-    //  }
-    //  else//turn left
-    //  {
-    //    //turn on the green led
-    //    HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
+     if(cmf>10)//nothing in front
+     {
+       Forward(20);
+       if((cml-cmr<3)&&(cml-cmr>-3))//do nothing
+       {
+         Turn_Left(0);
+       }
+       else
+       {
+        Alignment(cml, cmr);
+       }
+       
+       drive();
+       toggleLD2(50);
+       continue;
+     }
+     else//turn left
+     {
+       //turn on the green led
+       HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
 
-    //    //turn left
-    //    turn_Angle(90,1);
+       //turn left
+       turn_Angle(90,1);
 
-    //    //move the vehicle to the front a bit
-    //    Forward(15);
-    //    Left(0);
-    //    Turn_Left(0);
-    //    drive();
-    //    HAL_Delay(1000);
+       //move the vehicle to the front a bit
+       Forward(15);
+       Left(0);
+       Turn_Left(0);
+       drive();
+       HAL_Delay(1000);
 
-    //    //finish the turning
-    //    HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
-    //    Forward(20);
-    //    drive();
+       //finish the turning
+       HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
+       Forward(20);
+       drive();
 
-    //    toggleLD2(50);
-    //    continue;
-    //  }
+       toggleLD2(50);
+       continue;
+     }
     /****************TASK 2******************/
     // }
     // Forward(0);
