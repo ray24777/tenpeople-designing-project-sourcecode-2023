@@ -262,10 +262,11 @@ void drive ()
     outputstr [5] = yspeed / 10;
     outputstr [6] = yspeed % 10;
     outputstr [7] = wflag;
-    outputstr [8] = wspeed / 100;
-    outputstr [9] = wspeed % 100 / 10;
-    outputstr [10] = wspeed % 10;
+    outputstr [8] = '0';
+    outputstr [9] = '1';
+    outputstr [10] = '2';
     //Transmit the instruction to the motor driver
+    printf("Speed Left=%d, Speed Right=%d\r\n",xspeed,yspeed);
     HAL_UART_Transmit(&huart4, (uint8_t*)outputstr, 11, 100);
 }
 //Redirect arduino print to UART
@@ -308,122 +309,145 @@ void Backward(uint8_t speed)
   yflag=1;
 }
 
-void Turn_Left(uint16_t speed)
+void Turn_Left(uint8_t speed)
 {
   xspeed=xspeed-speed;
-  yspeed=xspeed+speed;
+  yspeed=yspeed+speed;
   wflag=0;
   if (xspeed<0)
   {
     xflag=1;
   }
-}
-
-void Turn_Right(uint16_t speed)
-{
-  xspeed=xspeed+speed;
-  yspeed=xspeed-speed;
-  wflag=1;
-  if (yspeed<0)
+  else
+  {
+    xflag=2;
+  }
+  if(yspeed<0)
   {
     yflag=1;
+  }
+  else
+  {
+    yflag=2;
+  }
+}
+
+void Turn_Right(uint8_t speed)
+{
+  xspeed=xspeed+speed;
+  yspeed=yspeed-speed;
+  wflag=1;
+  if (xspeed<0)
+  {
+    xflag=1;
+  }
+  else
+  {
+    xflag=2;
+  }
+  if(yspeed<0)
+  {
+    yflag=1;
+  }
+  else
+  {
+    yflag=2;
   }
 }
 
 void Alignment(double cmleft, double cmright)
 {
-  cmleft+=3;
+  //cmleft+=3;
   printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cmleft, cmright);
   Inputultra = cmleft-cmright;
-  Inputdistance = (cmleft + cmright) / 2;
+  //Inputdistance = (cmleft + cmright) / 2;
 
   //if (PID_Compute(&myPIDdistance)==_FALSE)
   //  printf("PID_Compute for distance error\r\n");
 
   //printf("Outputdistance = %.3f\r\n", Outputdistance);
   //myPIDdistance.Compute();
-    if(Inputdistance < 15)
-    {
-      //go left
-      printf("Too close to wall\r\n");
-      HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
-      for(uint8_t i =0; i<=4;i++)
-      {
-      Forward(10);
-      Turn_Left(10);
-      drive();
-      HAL_Delay(500);
-      }
-      for(uint8_t i =0; i<=1;i++)
-      {
-      Forward(10);
-      Turn_Left(0);
-      drive();
-      HAL_Delay(500);
-      }
-      HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
-    }
-    else
-    {
-      if(Inputdistance > 30)
-      {
-        //go right
-        printf("Too far from wall\r\n");
-        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
-        for(uint8_t i =0; i<=4;i++)
-        {
-        Forward(10);
-        Turn_Right(10);
-        drive();
-        HAL_Delay(500);
-        }
-        for(uint8_t i =0; i<=1;i++)
-        {
-        Forward(10);
-        Turn_Right(0);
-        drive();
-        HAL_Delay(500);
-        }
-        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
-      }
-      else
-      {
-        Turn_Left(0);
-      }   
-    }
+    // if(Inputdistance < 15)
+    // {
+    //   //go left
+    //   printf("Too close to wall\r\n");
+    //   HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
+    //   for(uint8_t i =0; i<=4;i++)
+    //   {
+    //   Forward(10);
+    //   Turn_Left(10);
+    //   drive();
+    //   HAL_Delay(500);
+    //   }
+    //   for(uint8_t i =0; i<=1;i++)
+    //   {
+    //   Forward(10);
+    //   Turn_Left(0);
+    //   drive();
+    //   HAL_Delay(500);
+    //   }
+    //   HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
+    // }
+    // else
+    // {
+    //   if(Inputdistance > 30)
+    //   {
+    //     //go right
+    //     printf("Too far from wall\r\n");
+    //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
+    //     for(uint8_t i =0; i<=4;i++)
+    //     {
+    //     Forward(10);
+    //     Turn_Right(10);
+    //     drive();
+    //     HAL_Delay(500);
+    //     }
+    //     for(uint8_t i =0; i<=1;i++)
+    //     {
+    //     Forward(10);
+    //     Turn_Right(0);
+    //     drive();
+    //     HAL_Delay(500);
+    //     }
+    //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
+    //   }
+    //   else
+    //   {
+    //     Turn_Left(0);
+    //   }   
+    // }
   
 
   if (PID_Compute(&myPIDultra)==_FALSE)
     printf("PID_Compute for ultra error\r\n");
-
   printf("Outputultra = %.3f\r\n", Outputultra);
   //myPIDultra.Compute();
 
   if (Outputultra >= 0)
   {
-    if(Inputultra < 2)
-    {
+    // if(Inputultra < 1)
+    // {
+    //   //print(Inputultra);
+    //   Turn_Right(1);
+    // }
+    // else
+    // {
+      Turn_Left((uint8_t)Outputultra);
       //print(Inputultra);
-      Turn_Right(0);
-    }
-    else
-    {
-      Turn_Right((uint16_t)Outputultra);
-      //print(Inputultra);
-    }
+    //}
   }
   else
   {
-    if(Inputultra > -2)
-    {
+    // if(Inputultra > -1)
+    // {
+    //   //print(Inputultra);
+    //   Turn_Left(1);
+    // }
+    // else
+    // {
+      Turn_Right((uint8_t)(-Outputultra));
       //print(Inputultra);
-      Turn_Left(0);
-    }
-    else
-    {
-      Turn_Left((uint16_t)(-Outputultra));
-      //print(Inputultra);
-    }
+    //}
   }
   // Serial.print("Echoleft,right =");
   // Serial.print(templeft);//串口输出等待时间的原始数�?????????
@@ -804,10 +828,10 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   //Load parameters to PID
-  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra,  20, 40, 1, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra,  1, 2, 0.05, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDultra, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&myPIDultra, 50);
-  PID_SetOutputLimits(&myPIDultra, -500, 500);
+  PID_SetOutputLimits(&myPIDultra, -10, 10);
 
   PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance,  0.8, 200, 15, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDdistance, _PID_MODE_AUTOMATIC);
@@ -857,11 +881,11 @@ int main(void)
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
     // Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
     // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
-//    Forward(10);
+    //Forward(10);
 //    Left(0);
-//    Turn_Left(0);
-//    drive();
-//    toggleLD2(1000);
+    //Turn_Left(10);
+    //drive();
+    //toggleLD2(500);
 
     // Forward(0);
     // Left(0);
@@ -932,6 +956,7 @@ int main(void)
      while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
      {
        //waiting for the counting to finish
+       //toggleLD2(50);
      }
   
      if (cml-cmr>50)//if the difference is too large, then turn right
@@ -939,7 +964,7 @@ int main(void)
        //turn on the red led
        HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-       //move the vehicle to the ldrfront a bit
+       //move the vehicle to the front a bit
        Forward(15);
        Left(0);
        Turn_Left(0);
@@ -974,16 +999,8 @@ int main(void)
 
      if(cmf>10)//nothing in front
      {
-       Forward(20);
-       if((cml-cmr<3)&&(cml-cmr>-3))//do nothing
-       {
-         Turn_Left(0);
-       }
-       else
-       {
-        Alignment(cml, cmr);
-       }
-       
+       Forward(10);
+       Alignment(cml, cmr);
        drive();
        toggleLD2(50);
        continue;
@@ -1012,19 +1029,6 @@ int main(void)
        continue;
      }
     /****************TASK 2******************/
-    // }
-    // Forward(0);
-    // Left(0);
-    // Turn_Left(0);
-    // drive();
-    // toggleLD2(100);
-    // while ()
-    // {
-    //   /* code */
-    // }
-    //turn_Angle(90,1);
-    //HAL_Delay(5000);
-
   }
 
 
