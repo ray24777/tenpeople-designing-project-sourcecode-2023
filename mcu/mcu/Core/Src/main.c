@@ -367,7 +367,7 @@ void Alignment(double cmleft, double cmright)
 
   //printf("Outputdistance = %.3f\r\n", Outputdistance);
   //myPIDdistance.Compute();
-     if(Inputdistance < 5)
+     if(Inputdistance < 15)
      {
        //go left
       printf("Too close to wall\r\n");
@@ -980,7 +980,7 @@ int main(void)
 
      if (cml-cmr>50)//if the difference is too large, then turn right
      {
-       printf("Turning Right, left = %dcm, right = %dcm\r\n",cml,cmr);
+       printf("Turning Right, left = %.3fcm, right = %.3fcm\r\n",cml,cmr);
        //turn on the red led
        HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
@@ -1003,7 +1003,7 @@ int main(void)
        Forward(10);
        yflag=1;
        drive();
-       HAL_Delay(3000);
+       HAL_Delay(2800);
 
        //move the vehicle to the front a bit
        Forward(15);
@@ -1025,18 +1025,19 @@ int main(void)
      if(cmf>15)//nothing in front
      {
        Forward(10);
-       //if ((cml-cmr>2) || (cml-cmr<-2))
+       if ((cml-cmr>2) || (cml-cmr<-2))
         Alignment(cml, cmr);
 
        drive();
        toggleLD2(50);
        continue;
      }
-     else//turn left
+     else
      {
+      //turn left
       if((cml+cmr)/2<30)
       {
-       printf("Turning Left, left = %dcm, right = %dcm\r\n",cml,cmr);
+       printf("Turning Left, left = %.3fcm, right = %.3fcm\r\n",cml,cmr);
        //turn on the green led
        HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
 
@@ -1045,7 +1046,7 @@ int main(void)
        Forward(10);
        xflag=1;
        drive();
-       HAL_Delay(3000);
+       HAL_Delay(2800);
 
        //move the vehicle to the front a bit
        Forward(15);
