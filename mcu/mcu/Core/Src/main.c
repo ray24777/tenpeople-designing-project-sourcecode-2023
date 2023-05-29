@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -34,9 +34,9 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-//for ATK process
-#define  UART_ENABLE_RE(USARTx)       USARTx.Instance->CR1|= (uint32_t)0x0004
-#define  UART_DISABLE_RE(USARTx)      USARTx.Instance->CR1&= (~(uint32_t)0x0004)
+// for ATK process
+#define UART_ENABLE_RE(USARTx) USARTx.Instance->CR1 |= (uint32_t)0x0004
+#define UART_DISABLE_RE(USARTx) USARTx.Instance->CR1 &= (~(uint32_t)0x0004)
 
 /* USER CODE END PD */
 
@@ -58,50 +58,48 @@ TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
 
 /* USER CODE BEGIN PV */
-//varables for the timer
-uint8_t timel_flag=0;//0: first capture, 1: second capture
-uint8_t timel_fin=0;//0: not finished, 1: finished
-uint64_t timel_1=0;
-uint64_t timel_2=0;//left sensor
-double cml=0;//cm of left sensor
+// varables for the timer
+uint8_t timel_flag = 0; // 0: first capture, 1: second capture
+uint8_t timel_fin = 0;  // 0: not finished, 1: finished
+uint64_t timel_1 = 0;
+uint64_t timel_2 = 0; // left sensor
+double cml = 0;       // cm of left sensor
 
-uint8_t timer_flag=0;//0: first capture, 1: second capture
-uint8_t timer_fin=0;//0: not finished, 1: finished
-uint64_t timer_1=0;
-uint64_t timer_2=0;//right sensor
-double cmr=0;//cm of right sensor
+uint8_t timer_flag = 0; // 0: first capture, 1: second capture
+uint8_t timer_fin = 0;  // 0: not finished, 1: finished
+uint64_t timer_1 = 0;
+uint64_t timer_2 = 0; // right sensor
+double cmr = 0;       // cm of right sensor
 
-uint8_t timef_flag=0;
-uint8_t timef_fin=0;//0: not finished, 1: finished
-uint32_t timef_1=0;
-uint32_t timef_2=0;//right sensor
-double cmf=0;//cm of right sensor
-
+uint8_t timef_flag = 0;
+uint8_t timef_fin = 0; // 0: not finished, 1: finished
+uint32_t timef_1 = 0;
+uint32_t timef_2 = 0; // right sensor
+double cmf = 0;       // cm of right sensor
 
 double Inputultra, Outputultra;
-double Setpointultra= 0;
+double Setpointultra = 0;
 double Inputdistance, Outputdistance;
-double Setpointdistance= 20;
+double Setpointdistance = 20;
 
 double Inputopenmv, Outputopenmv;
-double Setpointopenmv=0;
+double Setpointopenmv = 0;
 
-PID_TypeDef myPIDultra; //PID structure
-PID_TypeDef myPIDdistance; //PID structure
+PID_TypeDef myPIDultra;    // PID structure
+PID_TypeDef myPIDdistance; // PID structure
 
-PID_TypeDef myPIDopenmv; //PID structure
+PID_TypeDef myPIDopenmv; // PID structure
 
+int xspeed = 0;    // speed of x axis
+uint8_t xflag = 0; // 2: forward, 1: backward
 
-uint8_t xspeed=0;//speed of x axis
-uint8_t xflag=0;//2: forward, 1: backward
+int yspeed = 0;    // speed of y axis
+uint8_t yflag = 0; // 2: right, 1: left
 
-uint8_t yspeed=0;//speed of y axis
-uint8_t yflag=0;//2: right, 1: left
+uint16_t wspeed = 0; // anguler speed
+uint8_t wflag = 0;   // 2: counter-clock, 1: clock
 
-uint16_t wspeed=0;//anguler speed
-uint8_t wflag=0;//2: counter-clock, 1: clock
-
-uint8_t openmv_instrction[7]={0};//instruction from openmv
+uint8_t openmv_instrction[7] = {0}; // instruction from openmv
 
 float roll, pitch, yaw; // ATK Return Value
 int selfAngelint;
@@ -122,306 +120,312 @@ static void MX_USART1_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
-//Redirect printf to UART
+// Redirect printf to UART
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 
-//define a function to toggle the LD2 LED in a certain pattern
-void toggleLD2(uint32_t delay) {
+// define a function to toggle the LD2 LED in a certain pattern
+void toggleLD2(uint32_t delay)
+{
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
   HAL_Delay(delay);
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin,GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
   HAL_Delay(delay);
-  //printf("Working\r\n");
+  // printf("Working\r\n");
 }
 
-//interrupt handler for the timer
+// interrupt handler for the timer
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-  if (htim->Instance == TIM5) {
-      switch (htim->Channel) {
-        case HAL_TIM_ACTIVE_CHANNEL_2://right sensor
-          if(timer_flag==0)
-          {
-            timer_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-            //printf("Echo right counter tr1= %d\r\n",timer_1);
-            timer_flag=1;
-            timer_fin=0;
-          }
-          else
-          {
-            timer_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-            //printf("Echo right counter tr2= %d\r\n",timer_2);
-            timer_flag=0;
-            timer_fin=1;
-            if(timer_1<timer_2)//if the timer is not overflowed
-            {
-              cmr = (double)(timer_2 - timer_1) * 0.017;//340*100/1e6/2
-            }
-            else
-            {
-              cmr = (double)(timer_2 + 0xffffffff - timer_1) * 0.017;//340*100/1e6/2
-            }
-            timer_1=0;
-            //printf("Distance right = %.3f cm. \r\n",  cmr);
-          }
-          //printf("Echo right: t1= %.3f us,  t2= %.3f us\r",timer_1*10, timer_2*10);
-          HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
-          break;
-
-        case HAL_TIM_ACTIVE_CHANNEL_1://left sensor
-          if(timel_flag==0)
-          {
-            timel_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-            //printf("Echo left counter tl1= %d\r\n",timel_1);
-            timel_flag=1;
-            timel_fin=0;
-          }
-          else
-          {
-            timel_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-            //printf("Echo left counter tl2= %d\r\n",timel_2);
-            timel_flag=0;
-            timel_fin=1;
-            if(timel_1<timel_2)//if the timer is not overflowed
-            {
-              cml = (double)(timel_2 - timel_1) * 0.017;//340*100/1e6/2
-            }
-            else
-            {
-              cml = (double)(timel_2 + 0xffffffff - timel_1) * 0.017;//340*100/1e6/2
-            }
-            timel_1=0;
-          }
-          //printf("Echo left: t1= %.3f us,  t2= %.3f us\r",timel_1*10, timel_2*10);
-          //printf("Distance left = %.3f cm. \r\n",  cml);
-          HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
-          break;
-        default:
-          printf("Error timer channel.\r\n");
-          break;
+  if (htim->Instance == TIM5)
+  {
+    switch (htim->Channel)
+    {
+    case HAL_TIM_ACTIVE_CHANNEL_2: // right sensor
+      if (timer_flag == 0)
+      {
+        timer_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+        // printf("Echo right counter tr1= %d\r\n",timer_1);
+        timer_flag = 1;
+        timer_fin = 0;
       }
+      else
+      {
+        timer_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+        // printf("Echo right counter tr2= %d\r\n",timer_2);
+        timer_flag = 0;
+        timer_fin = 1;
+        if (timer_1 < timer_2) // if the timer is not overflowed
+        {
+          cmr = (double)(timer_2 - timer_1) * 0.017; // 340*100/1e6/2
+        }
+        else
+        {
+          cmr = (double)(timer_2 + 0xffffffff - timer_1) * 0.017; // 340*100/1e6/2
+        }
+        timer_1 = 0;
+        // printf("Distance right = %.3f cm. \r\n",  cmr);
+      }
+      // printf("Echo right: t1= %.3f us,  t2= %.3f us\r",timer_1*10, timer_2*10);
+      HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
+      break;
+
+    case HAL_TIM_ACTIVE_CHANNEL_1: // left sensor
+      if (timel_flag == 0)
+      {
+        timel_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+        // printf("Echo left counter tl1= %d\r\n",timel_1);
+        timel_flag = 1;
+        timel_fin = 0;
+      }
+      else
+      {
+        timel_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+        // printf("Echo left counter tl2= %d\r\n",timel_2);
+        timel_flag = 0;
+        timel_fin = 1;
+        if (timel_1 < timel_2) // if the timer is not overflowed
+        {
+          cml = (double)(timel_2 - timel_1) * 0.017; // 340*100/1e6/2
+        }
+        else
+        {
+          cml = (double)(timel_2 + 0xffffffff - timel_1) * 0.017; // 340*100/1e6/2
+        }
+        timel_1 = 0;
+      }
+      // printf("Echo left: t1= %.3f us,  t2= %.3f us\r",timel_1*10, timel_2*10);
+      // printf("Distance left = %.3f cm. \r\n",  cml);
+      HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
+      break;
+    default:
+      printf("Error timer channel.\r\n");
+      break;
     }
-  if (htim->Instance == TIM4) {
-    switch (htim->Channel) {
-        case HAL_TIM_ACTIVE_CHANNEL_1://right sensor
-          if(timef_flag==0)
-          {
-            timef_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-            //printf("Echo front: tf1= %d us\r",timef_1*10);
-            timef_flag=1;
-            timef_fin=0;
-          }
-          else
-          {
-            timef_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-            timef_flag=0;
-            timef_fin=1;
-            if(timef_1<timef_2)//if the timer is not overflowed
-            {
-              cmf = (double)(timef_2 - timef_1) * 3.4;//340*100/5e3/2
-            }
-            else
-            {
-              cmf = (double)(timef_2 + 0xffff - timef_1) * 3.4;//340*100/5e3/2
-            }
-            timef_1=0;
-          }
-          //printf("Echo front: t= %.3f us\r\n",timel_1*10, timer_2*10);
-          //printf("Distance front = %.3f cm. \r\n",  cmf);
-          HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
-          break;
-        default:
-          printf("Error timer channel.\r\n");
-          break;
+  }
+  if (htim->Instance == TIM4)
+  {
+    switch (htim->Channel)
+    {
+    case HAL_TIM_ACTIVE_CHANNEL_1: // right sensor
+      if (timef_flag == 0)
+      {
+        timef_1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+        // printf("Echo front: tf1= %d us\r",timef_1*10);
+        timef_flag = 1;
+        timef_fin = 0;
+      }
+      else
+      {
+        timef_2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+        timef_flag = 0;
+        timef_fin = 1;
+        if (timef_1 < timef_2) // if the timer is not overflowed
+        {
+          cmf = (double)(timef_2 - timef_1) * 3.4; // 340*100/5e3/2
+        }
+        else
+        {
+          cmf = (double)(timef_2 + 0xffff - timef_1) * 3.4; // 340*100/5e3/2
+        }
+        timef_1 = 0;
+      }
+      // printf("Echo front: t= %.3f us\r\n",timel_1*10, timer_2*10);
+      // printf("Distance front = %.3f cm. \r\n",  cmf);
+      HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
+      break;
+    default:
+      printf("Error timer channel.\r\n");
+      break;
     }
   }
 }
-void toggleldr(uint32_t delay) {
-  HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
-  HAL_Delay(delay);
-  HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-  HAL_Delay(delay);
-}
-
-void toggleldg(uint32_t delay) {
-  HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
-  HAL_Delay(delay);
-  HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
-  HAL_Delay(delay);
-}
-
-void drive ()
+void toggleldr(uint32_t delay)
 {
-  //Transfer int to char for output
-    char outputstr [11];
-    outputstr [0] = 0x90;
-    outputstr [1] = xflag;
-    outputstr [2] = xspeed / 10;
-    outputstr [3] = xspeed % 10;
-    outputstr [4] = yflag;
-    outputstr [5] = yspeed / 10;
-    outputstr [6] = yspeed % 10;
-    outputstr [7] = wflag;
-    outputstr [8] = '0';
-    outputstr [9] = '1';
-    outputstr [10] = '2';
-    //Transmit the instruction to the motor driver
-    printf("Speed Left=%d, Speed Right=%d\r\n",xspeed,yspeed);
-    HAL_UART_Transmit(&huart4, (uint8_t*)outputstr, 11, 100);
+  HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin, GPIO_PIN_SET);
+  HAL_Delay(delay);
+  HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin, GPIO_PIN_RESET);
+  HAL_Delay(delay);
 }
-//Redirect arduino print to UART
+
+void toggleldg(uint32_t delay)
+{
+  HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin, GPIO_PIN_SET);
+  HAL_Delay(delay);
+  HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin, GPIO_PIN_RESET);
+  HAL_Delay(delay);
+}
+
+void drive()
+{
+  // Transfer int to char for output
+  char outputstr[11];
+  outputstr[0] = 0x90;
+  outputstr[1] = xflag;
+  outputstr[2] = xspeed / 10;
+  outputstr[3] = xspeed % 10;
+  outputstr[4] = yflag;
+  outputstr[5] = yspeed / 10;
+  outputstr[6] = yspeed % 10;
+  outputstr[7] = wflag;
+  outputstr[8] = '0';
+  outputstr[9] = '1';
+  outputstr[10] = '2';
+  // Transmit the instruction to the motor driver
+  printf("Speed Left=%d, Speed Right=%d\r\n", xspeed, yspeed);
+  HAL_UART_Transmit(&huart4, (uint8_t *)outputstr, 11, 100);
+}
+// Redirect arduino print to UART
 void print(double c)
 {
   printf("%.3f", c);
 }
-//Redirect arduino println to UART
+// Redirect arduino println to UART
 void println(double str)
 {
   printf("%.3f\r\n", str);
 }
-//Redifine output functions
+// Redifine output functions
 
 void Right(uint8_t speed)
 {
-  yspeed=speed;
-  yflag=2;
+  yspeed = speed;
+  yflag = 2;
 }
 
 void Left(uint8_t speed)
 {
-  yspeed=speed;
-  yflag=1;
+  yspeed = speed;
+  yflag = 1;
 }
 
 void Forward(uint8_t speed)
 {
-  xspeed=speed;
-  yspeed=speed;
-  xflag=2;
-  yflag=2;
+  xspeed = speed;
+  yspeed = speed;
+  xflag = 2;
+  yflag = 2;
 }
 
 void Backward(uint8_t speed)
 {
-  xspeed=speed;
-  yspeed=speed;
-  xflag=1;
-  yflag=1;
+  xspeed = speed;
+  yspeed = speed;
+  xflag = 1;
+  yflag = 1;
 }
 
 void Turn_Left(uint8_t speed)
 {
-  xspeed=xspeed-speed;
-  yspeed=yspeed+speed;
-  wflag=0;
-  if (xspeed<0)
+  xspeed = xspeed - speed;
+  yspeed = yspeed + speed;
+  wflag = 0;
+  if (xspeed < 0)
   {
-    xflag=1;
+    xflag = 1;
   }
   else
   {
-    xflag=2;
+    xflag = 2;
   }
-  if(yspeed<0)
+  if (yspeed < 0)
   {
-    yflag=1;
+    yflag = 1;
   }
   else
   {
-    yflag=2;
+    yflag = 2;
   }
 }
 
 void Turn_Right(uint8_t speed)
 {
-  xspeed=xspeed+speed;
-  yspeed=yspeed-speed;
-  wflag=1;
-  if (xspeed<0)
+  xspeed = xspeed + speed;
+  yspeed = yspeed - speed;
+  wflag = 1;
+  if (xspeed < 0)
   {
-    xflag=1;
+    xflag = 1;
   }
   else
   {
-    xflag=2;
+    xflag = 2;
   }
-  if(yspeed<0)
+  if (yspeed < 0)
   {
-    yflag=1;
+    yflag = 1;
   }
   else
   {
-    yflag=2;
+    yflag = 2;
   }
 }
 
 void Alignment(double cmleft, double cmright)
 {
-  //cmleft+=3;
+  // cmleft+=3;
   printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cmleft, cmright);
-  Inputultra = cmleft-cmright;
-  //Inputdistance = (cmleft + cmright) / 2;
+  Inputultra = cmleft - cmright;
+  // Inputdistance = (cmleft + cmright) / 2;
 
-  //if (PID_Compute(&myPIDdistance)==_FALSE)
-  //  printf("PID_Compute for distance error\r\n");
+  // if (PID_Compute(&myPIDdistance)==_FALSE)
+  //   printf("PID_Compute for distance error\r\n");
 
-  //printf("Outputdistance = %.3f\r\n", Outputdistance);
-  //myPIDdistance.Compute();
-    // if(Inputdistance < 15)
-    // {
-    //   //go left
-    //   printf("Too close to wall\r\n");
-    //   HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
-    //   for(uint8_t i =0; i<=4;i++)
-    //   {
-    //   Forward(10);
-    //   Turn_Left(10);
-    //   drive();
-    //   HAL_Delay(500);
-    //   }
-    //   for(uint8_t i =0; i<=1;i++)
-    //   {
-    //   Forward(10);
-    //   Turn_Left(0);
-    //   drive();
-    //   HAL_Delay(500);
-    //   }
-    //   HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
-    // }
-    // else
-    // {
-    //   if(Inputdistance > 30)
-    //   {
-    //     //go right
-    //     printf("Too far from wall\r\n");
-    //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
-    //     for(uint8_t i =0; i<=4;i++)
-    //     {
-    //     Forward(10);
-    //     Turn_Right(10);
-    //     drive();
-    //     HAL_Delay(500);
-    //     }
-    //     for(uint8_t i =0; i<=1;i++)
-    //     {
-    //     Forward(10);
-    //     Turn_Right(0);
-    //     drive();
-    //     HAL_Delay(500);
-    //     }
-    //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
-    //   }
-    //   else
-    //   {
-    //     Turn_Left(0);
-    //   }   
-    // }
-  
+  // printf("Outputdistance = %.3f\r\n", Outputdistance);
+  // myPIDdistance.Compute();
+  //  if(Inputdistance < 15)
+  //  {
+  //    //go left
+  //    printf("Too close to wall\r\n");
+  //    HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
+  //    for(uint8_t i =0; i<=4;i++)
+  //    {
+  Forward(10);
+  //   Turn_Left(10);
+  //   drive();
+  //   HAL_Delay(500);
+  //   }
+  //   for(uint8_t i =0; i<=1;i++)
+  //   {
+  Forward(10);
+  //   Turn_Left(0);
+  //   drive();
+  //   HAL_Delay(500);
+  //   }
+  //   HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
+  // }
+  // else
+  // {
+  //   if(Inputdistance > 30)
+  //   {
+  //     //go right
+  //     printf("Too far from wall\r\n");
+  //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
+  //     for(uint8_t i =0; i<=4;i++)
+  //     {
+  Forward(10);
+  //     Turn_Right(10);
+  //     drive();
+  //     HAL_Delay(500);
+  //     }
+  //     for(uint8_t i =0; i<=1;i++)
+  //     {
+  Forward(10);
+  //     Turn_Right(0);
+  //     drive();
+  //     HAL_Delay(500);
+  //     }
+  //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
+  //   }
+  //   else
+  //   {
+  //     Turn_Left(0);
+  //   }
+  // }
 
-  if (PID_Compute(&myPIDultra)==_FALSE)
+  if (PID_Compute(&myPIDultra) == _FALSE)
     printf("PID_Compute for ultra error\r\n");
   printf("Outputultra = %.3f\r\n", Outputultra);
-  //myPIDultra.Compute();
+  // myPIDultra.Compute();
 
   if (Outputultra >= 0)
   {
@@ -432,8 +436,8 @@ void Alignment(double cmleft, double cmright)
     // }
     // else
     // {
-      Turn_Left((uint8_t)Outputultra);
-      //print(Inputultra);
+    Turn_Left((uint8_t)Outputultra);
+    // print(Inputultra);
     //}
   }
   else
@@ -445,8 +449,8 @@ void Alignment(double cmleft, double cmright)
     // }
     // else
     // {
-      Turn_Right((uint8_t)(-Outputultra));
-      //print(Inputultra);
+    Turn_Right((uint8_t)(-Outputultra));
+    // print(Inputultra);
     //}
   }
   // Serial.print("Echoleft,right =");
@@ -465,7 +469,6 @@ uint8_t hc12send(uint8_t data)
   return HAL_UART_Transmit(&huart5, &data, 1, 100);
 }
 
-
 uint8_t openmvreceive(void)
 {
   return HAL_UART_Receive(&huart3, &openmv_instrction, 7, 100);
@@ -473,17 +476,17 @@ uint8_t openmvreceive(void)
 
 int atkAngleRound(int a)
 {
-  return ((a + 360)%360);
+  return ((a + 360) % 360);
 }
-void ATKPrcess()// update ATK value
+void ATKPrcess() // update ATK value
 {
   int r = 0;
   char ATKbuf[100];
 
   UART_ENABLE_RE(huart1);
-  if (HAL_UART_Receive(&huart1, (uint8_t*)ATKbuf, 20, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
+  if (HAL_UART_Receive(&huart1, (uint8_t *)ATKbuf, 20, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
   {
-    UART_DISABLE_RE(huart1); //error
+    UART_DISABLE_RE(huart1); // error
     return;
   }
   UART_DISABLE_RE(huart1);
@@ -493,32 +496,32 @@ void ATKPrcess()// update ATK value
   // SendPC(ATKbuf, 30);
 
   char ATKframes[10];
-  for(r = 3; r<20; r++){ // Find the Report message
-    if((ATKbuf[r-3] == 0x55 && ATKbuf[r-2] == 0x55) && ATKbuf[r-1] == 0x01)
+  for (r = 3; r < 20; r++)
+  { // Find the Report message
+    if ((ATKbuf[r - 3] == 0x55 && ATKbuf[r - 2] == 0x55) && ATKbuf[r - 1] == 0x01)
     {
       int i = 0, N = ATKbuf[r];
-      char * tmp = &ATKbuf[r+1];
+      char *tmp = &ATKbuf[r + 1];
 
       // char pp[] = "\x90\x90\x90\x90";
       // SendPC(pp, 4);
       // SendPC(tmp, 8);
 
-      uint8_t sum = 0x55 + 0x55 + 0x01 + N;  //checksum
-      for(i = 0; i < N; i++)
+      uint8_t sum = 0x55 + 0x55 + 0x01 + N; // checksum
+      for (i = 0; i < N; i++)
       {
         ATKframes[i] = tmp[i];
         sum += tmp[i];
       }
 
-      if(sum == tmp[i])
+      if (sum == tmp[i])
       {
         break; // if checksum pass
       }
-
     }
   }
 
-  if(r == 20) // Do not find the correct reply
+  if (r == 20) // Do not find the correct reply
   {
     return;
   }
@@ -539,39 +542,39 @@ void ATKPrcess()// update ATK value
   // HAL_UART_Transmit(&huart5, qwq, 4, HAL_MAX_DELAY);
 }
 
-void Set_angle(TIM_HandleTypeDef * htim,uint32_t Channel,uint8_t angle,uint32_t countPeriod,uint32_t CycleTime)
+void Set_angle(TIM_HandleTypeDef *htim, uint32_t Channel, uint8_t angle, uint32_t countPeriod, uint32_t CycleTime)
 {
-	uint16_t compare_value=0;
-  if(angle<=180)
+  uint16_t compare_value = 0;
+  if (angle <= 180)
   {
-    compare_value=0.5*countPeriod/CycleTime+angle*countPeriod/CycleTime/90; //compute the compare_value
+    compare_value = 0.5 * countPeriod / CycleTime + angle * countPeriod / CycleTime / 90; // compute the compare_value
     __HAL_TIM_SET_COMPARE(htim, Channel, compare_value);
-	}
+  }
 }
 
 int GetOpemMv() // Return Turn Angle
 {
-  printf("ok\r\n");    
+  printf("ok\r\n");
 
   uint8_t r = 0;
   char Mvbuf[10];
-  char* frame;
+  char *frame;
   int TurnAngle = 0;
 
   UART_ENABLE_RE(huart3);
-  if (HAL_UART_Receive(&huart3, (uint8_t*)Mvbuf, 10, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
+  if (HAL_UART_Receive(&huart3, (uint8_t *)Mvbuf, 10, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
   {
-    UART_DISABLE_RE(huart3); //error
+    UART_DISABLE_RE(huart3); // error
     return HAL_ERROR;
   }
   UART_DISABLE_RE(huart3);
 
-  for(r=0; r<5;r++)
+  for (r = 0; r < 5; r++)
   {
-    if(Mvbuf[r] == 'a')
+    if (Mvbuf[r] == 'a')
     {
       frame = Mvbuf + r;
-      // printf("%s\r\n", frame);    
+      // printf("%s\r\n", frame);
       if (frame[1] == '1')
       {
         TurnAngle = (frame[2] - '0') * 100 + (frame[3] - '0') * 10 + (frame[4] - '0');
@@ -584,49 +587,49 @@ int GetOpemMv() // Return Turn Angle
       }
     }
   }
-  if(Mvbuf[r] == 'a')
+  if (Mvbuf[r] == 'a')
     return TurnAngle;
   return HAL_ERROR;
 }
 
 void turn_Angle(int angle, int direction)
 {
-  int aimAngle=0;
-  int iniAngle=0;
+  int aimAngle = 0;
+  int iniAngle = 0;
   int comAngle[3];
-  int tolAngle=0;
-  int avgAngle=0;
+  int tolAngle = 0;
+  int avgAngle = 0;
   int n = 0;
   uint8_t flag = 1;
   ATKPrcess();
   iniAngle = selfAngelint;
 
-  if(direction == 1)
+  if (direction == 1)
   {
-    // Forward(0);
+    Forward(0);
     // Left(0);
     // Turn_Left(300); //增大目前角度
     // drive();
 
-    Forward(10);
-    xflag=2;
+    // Forward(10);
+    xflag = 2;
     drive();
 
     ATKPrcess();
     iniAngle = selfAngelint;
     comAngle[n] = atkAngleRound(selfAngelint - iniAngle);
     tolAngle += comAngle[n];
-    n=(n+1)%3;
+    n = (n + 1) % 3;
 
     ATKPrcess();
     comAngle[n] = atkAngleRound(selfAngelint - iniAngle);
     tolAngle += comAngle[n];
-    n=(n+1)%3;
+    n = (n + 1) % 3;
 
     ATKPrcess();
     comAngle[n] = atkAngleRound(selfAngelint - iniAngle);
     tolAngle += comAngle[n];
-    n=(n+1)%3;
+    n = (n + 1) % 3;
 
     while (1)
     {
@@ -635,25 +638,24 @@ void turn_Angle(int angle, int direction)
       tolAngle -= comAngle[n];
       comAngle[n] = atkAngleRound(selfAngelint - iniAngle);
       tolAngle += comAngle[n];
-      avgAngle = (int)(tolAngle/3);
-      n=(n+1)%3;
-      if (avgAngle == (angle-3) && avgAngle <= (angle+3))
+      avgAngle = (int)(tolAngle / 3);
+      n = (n + 1) % 3;
+      if (avgAngle == (angle - 3) && avgAngle <= (angle + 3))
         break;
 
-      if (avgAngle >= (angle/2) && avgAngle <= (angle+3) && flag == 1)
+      if (avgAngle >= (angle / 2) && avgAngle <= (angle + 3) && flag == 1)
       {
         flag = 2;
-        // Forward(0);
+        Forward(0);
         // Left(0);
         // Turn_Left(300); //增大目前角度
         // drive();
-
       }
-      
-      if (avgAngle >= (angle+10) && flag == 2)
+
+      if (avgAngle >= (angle + 10) && flag == 2)
       {
         // flag = 0;
-        // Forward(0);
+        Forward(0);
         // Left(0);
         // Turn_Right(200); //增大目前角度
         // drive();
@@ -663,7 +665,7 @@ void turn_Angle(int angle, int direction)
       // SendPCint(aimAngle);
     }
 
-    // Forward(0);
+    Forward(0);
     // Left(0);
     // Turn_Left(0);
     // drive();
@@ -673,7 +675,7 @@ void turn_Angle(int angle, int direction)
     // if (atkAngleRound(selfAngelint - iniAngle) >= (angle-1) && atkAngleRound(selfAngelint - iniAngle) <= (angle+1))
     //   return;
 
-    // Forward(0);
+    Forward(0);
     // Left(0);
     // Turn_Right(150); //减小目前角度
     // drive();
@@ -688,31 +690,31 @@ void turn_Angle(int angle, int direction)
     //   // SendPCint(aimAngle);
     // }
   }
-  else if(direction == 2)
+  else if (direction == 2)
   {
-    // Forward(0);
+    Forward(0);
     // Left(0);
     // Turn_Right(300);//减小目前角度
     // drive();
-    Forward(10);
-    yflag=2;
+    // Forward(10);
+    yflag = 2;
     drive();
 
     ATKPrcess();
     iniAngle = selfAngelint;
     comAngle[n] = atkAngleRound(iniAngle - selfAngelint);
     tolAngle += comAngle[n];
-    n=(n+1)%3;
+    n = (n + 1) % 3;
 
     ATKPrcess();
     comAngle[n] = atkAngleRound(iniAngle - selfAngelint);
     tolAngle += comAngle[n];
-    n=(n+1)%3;
+    n = (n + 1) % 3;
 
     ATKPrcess();
     comAngle[n] = atkAngleRound(iniAngle - selfAngelint);
     tolAngle += comAngle[n];
-    n=(n+1)%3;
+    n = (n + 1) % 3;
 
     while (1)
     {
@@ -721,34 +723,34 @@ void turn_Angle(int angle, int direction)
       tolAngle -= comAngle[n];
       comAngle[n] = atkAngleRound(iniAngle - selfAngelint);
       tolAngle += comAngle[n];
-      avgAngle = (int)(tolAngle/3);
-      n=(n+1)%3;
-      if (avgAngle >= (angle-3) && avgAngle <= (angle+7))
+      avgAngle = (int)(tolAngle / 3);
+      n = (n + 1) % 3;
+      if (avgAngle >= (angle - 3) && avgAngle <= (angle + 7))
         break;
-      if (avgAngle >= (angle/2) && avgAngle <= (angle+7) && flag == 1)
+      if (avgAngle >= (angle / 2) && avgAngle <= (angle + 7) && flag == 1)
       {
         flag = 2;
-        // Forward(0);
+        Forward(0);
         // Left(0);
         // Turn_Right(400); //增大目前角度
         // drive();
       }
 
-      if (avgAngle >= (angle+10) && flag == 2)
+      if (avgAngle >= (angle + 10) && flag == 2)
       {
-        
-//        flag = 0;
-//        Forward(0);
-//        Left(0);
-//        Turn_Left(200); //增大目前角度
-//        drive();
-    	  break;
+
+        //        flag = 0;
+        Forward(0);
+        //        Left(0);
+        //        Turn_Left(200); //增大目前角度
+        //        drive();
+        break;
       }
-      printf("diff=%d, selfangle=%d, avgAngle=%d \r\n", atkAngleRound(iniAngle- selfAngelint), selfAngelint, avgAngle);
+      printf("diff=%d, selfangle=%d, avgAngle=%d \r\n", atkAngleRound(iniAngle - selfAngelint), selfAngelint, avgAngle);
       // printf("diff=%d, selfangle=%d \r\n", atkAngleRound(selfAngelint - iniAngle), selfAngelint);
     }
 
-    // Forward(0);
+    Forward(0);
     // Left(0);
     // Turn_Right(0);
     // drive();
@@ -759,7 +761,7 @@ void turn_Angle(int angle, int direction)
     // if (atkAngleRound(iniAngle - selfAngelint) >= (angle-1) && atkAngleRound(iniAngle - selfAngelint) <= (angle+1))
     //   return;
 
-    // Forward(0);
+    Forward(0);
     // Left(0);
     // Turn_Left(150); //增大目前角度
     // drive();
@@ -774,7 +776,7 @@ void turn_Angle(int angle, int direction)
     // }
   }
 
-  Forward(0);
+  // Forward(0);
   Left(0);
   Turn_Left(0);
   drive();
@@ -786,13 +788,12 @@ void turn_Angle(int angle, int direction)
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -827,42 +828,42 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  //Load parameters to PID
-  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra,  1, 2, 0.05, _PID_P_ON_E, _PID_CD_DIRECT);
+  // Load parameters to PID
+  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra, 1, 2, 0.05, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDultra, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&myPIDultra, 50);
   PID_SetOutputLimits(&myPIDultra, -10, 10);
 
-  PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance,  0.8, 200, 15, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance, 0.8, 200, 15, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDdistance, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&myPIDdistance, 50);
   PID_SetOutputLimits(&myPIDdistance, -20, 20);
 
-  PID(&myPIDopenmv, &Inputopenmv, &Outputopenmv, &Setpointopenmv,  0.5, 1, 1.5, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDopenmv, &Inputopenmv, &Outputopenmv, &Setpointopenmv, 0.10, 0, 0.02, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDopenmv, _PID_MODE_AUTOMATIC);
-  PID_SetSampleTime(&myPIDopenmv, 50);
-  PID_SetOutputLimits(&myPIDopenmv, -900, 900);
+  PID_SetSampleTime(&myPIDopenmv, 100);
+  PID_SetOutputLimits(&myPIDopenmv, -10, 10);
 
-  //start TIM1 PWM generator
+  // start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // Machine Arm: 0(normal) and 180(putting)
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3); // Bule servo(top): 90
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4); // Bule servo(openmv): 110(rectangle) and 65(45 degree)
-  //start TIM5 IT left and right sensor
+  // start TIM5 IT left and right sensor
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
   HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
 
-  //Servo initial position
-  Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
-  Set_angle(&htim2,TIM_CHANNEL_3, 90,20000,20);
+  // Servo initial position
+  Set_angle(&htim2, TIM_CHANNEL_1, 0, 20000, 20);
+  Set_angle(&htim2, TIM_CHANNEL_3, 90, 20000, 20);
   // Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
-  Set_angle(&htim2,TIM_CHANNEL_4, 60,20000,20);
+  Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
 
-  //Recode initial Pitch
-  ATKPrcess();
-  initial_Pitch = pitch;
-  initial_selfAngelint = selfAngelint;
+  // Recode initial Pitch
+  //  ATKPrcess();
+  //  initial_Pitch = pitch;
+  //  initial_selfAngelint = selfAngelint;
 
   int openmvAngle = 0;
   printf("Initialized. \r\n");
@@ -876,16 +877,16 @@ int main(void)
     /****************Test******************/
     // Set_angle(&htim2,TIM_CHANNEL_4, 65,20000,20);
     // turn_Angle(45, 2);
-    //turn_Angle(90, 2);
-    //HAL_Delay(5000);
+    // turn_Angle(90, 2);
+    // HAL_Delay(5000);
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
     // Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
     // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
-    //Forward(10);
-//    Left(0);
-    //Turn_Left(10);
-    //drive();
-    //toggleLD2(500);
+    // Forward(10);
+    //    Left(0);
+    // Turn_Left(10);
+    // drive();
+    // toggleLD2(500);
 
     // Forward(0);
     // Left(0);
@@ -895,162 +896,181 @@ int main(void)
 
     // HAL_Delay(5000);
     // Set_angle(&htim2,TIM_CHANNEL_1, 150,20000,20);
-    //toggleLD2(100);
+    // toggleLD2(100);
 
-    //turn_Angle(60, 1);
+    // turn_Angle(60, 1);
 
-    //HAL_Delay(5000);
-    // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+    // HAL_Delay(5000);
+    //  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
     // HAL_Delay(10000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  /****************TASK 1******************/
-	  //follow the curve
-  //   if (PID_Compute(&myPIDdistance)==_FALSE)
-  //   printf("PID_Compute for distance error\r\n");
+    /****************TASK 1******************/
+    // follow the curve
+    //   if (PID_Compute(&myPIDdistance)==_FALSE)
+    //   printf("PID_Compute for distance error\r\n");
 
-  // printf("Outputdistance = %.3f\r\n", Outputdistance);
-//	  openmvAngle = GetOpemMv();
-//	  //openmvAngle=100;
-//  //  Inputopenmv=openmvAngle;
-//    if (openmvAngle != HAL_ERROR)
-//    {
-//      printf("openmvangle=%d\r\n", openmvAngle);
-//
-//      //  if (PID_Compute(&myPIDopenmv)==_FALSE)
-//      //    printf("PID_Compute for OpenMV error\r\n");
-//
-//      //  printf("Outputopenmv = %.3f\r\n", Outputopenmv);
-//
-//      if(openmvAngle > 0)
-//      {
-//        Forward(9);
-//        Left(0);
-//        if(openmvAngle>20)
-//          Turn_Right((int) ((openmvAngle/30) * 450) + 100);
-//        else
-//          Turn_Right((int) ((openmvAngle/30) * 400) + 100);
-//        //  Turn_Right((int)Outputopenmv);
-//        drive();
-//        // toggleLD2(100);
-//      }
-//      else
-//      {
-//        Forward(8);
-//        Left(0);
-//        Turn_Left((int) ((-1 * openmvAngle/30) * 400) + 100);
-//        //  Turn_Left(-1 * (int)Outputopenmv);
-//        drive();
-//        // toggleLD2(100);
-//      }
-//      toggleLD2(100);
-//    }
-	  //      Left(0);
-	  /****************TASK 1******************/
+    // printf("Outputdistance = %.3f\r\n", Outputdistance);
+    openmvAngle = GetOpemMv();
+    // openmvAngle=100;
 
+     Inputopenmv = openmvAngle;
+    if (openmvAngle != HAL_ERROR)
+    {
+      printf("openmvangle=%d\r\n", openmvAngle);
+
+      if (PID_Compute(&myPIDopenmv)==_FALSE)
+        printf("PID_Compute for OpenMV error\r\n");
+
+      printf("Outputopenmv = %d\r\n", (int)Outputopenmv);
+
+      if(Outputopenmv > 0)
+      {
+        Forward(13);
+        Turn_Right((int)Outputopenmv);
+        drive();
+      }
+      else
+      {
+        Forward(13);
+        Turn_Left((int)((-1) * Outputopenmv));
+        drive();
+      }
+      printf("Outputopenmv = %.3f\r\n", Outputopenmv);
+    //   if (openmvAngle >= -3 && openmvAngle <= 3)
+    //   {
+    //     Forward(10);
+    //     drive();
+    //     continue;
+    //   }
+    //   if (openmvAngle > 0)
+    //   {
+    //     Forward(15);
+    //     if (openmvAngle > 12)
+    //       Turn_Right((int)((openmvAngle / 30) * 10));
+    //     else
+    //       Turn_Right(5);
+    //     //  Turn_Right((int)Outputopenmv);
+    //     drive();
+    //     // toggleLD2(100);
+    //   }
+    //   else
+    //   {
+    //     Forward(15);
+    //     if (openmvAngle < -12)
+    //       Turn_Left((int)((-1) * openmvAngle / 30 * 10));
+    //     else
+    //       Turn_Left(5);
+    //     //  Turn_Left(-1 * (int)Outputopenmv);
+    //     drive();
+    //     // toggleLD2(100);
+      }
+    //   //  toggleLD2(50);
+    // }
+    //      Left(0);
+    /****************TASK 1******************/
 
     /****************TASK 2******************/
 
-     while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
-     {
-       //waiting for the counting to finish
-       //toggleLD2(50);
-     }
-  
-     if (cml-cmr>50)//if the difference is too large, then turn right
-     {
-       //turn on the red led
-       HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
+    //  while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
+    //  {
+    //    //waiting for the counting to finish
+    //    //toggleLD2(50);
+    //  }
 
-       //move the vehicle to the front a bit
-       Forward(15);
-       Left(0);
-       Turn_Left(0);
-       drive();
-       HAL_Delay(1000);
+    //  if (cml-cmr>50)//if the difference is too large, then turn right
+    //  {
+    //    //turn on the red led
+    //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-       //stop the vehicle
-       Forward(0);
-       Left(0);
-       Turn_Left(0);
-       drive();
-       HAL_Delay(500);
+    //    //move the vehicle to the front a bit
+    //    Forward(15);
+    //    Left(0);
+    //    Turn_Left(0);
+    //    drive();
+    //    HAL_Delay(1000);
 
-       //turn right
-       turn_Angle(90,2);
+    //    //stop the vehicle
+    //    Forward(0);
+    //    Left(0);
+    //    Turn_Left(0);
+    //    drive();
+    //    HAL_Delay(500);
 
-       //move the vehicle to the front a bit
-       Forward(15);
-       Left(0);
-       Turn_Left(0);
-       drive();
-       HAL_Delay(1000);
+    //    //turn right
+    //    turn_Angle(90,2);
 
-       //finish the turning
-       HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-       Forward(20);
-       drive();
+    //    //move the vehicle to the front a bit
+    //    Forward(15);
+    //    Left(0);
+    //    Turn_Left(0);
+    //    drive();
+    //    HAL_Delay(1000);
 
-       toggleLD2(50);
-       continue;
-     }
+    //    //finish the turning
+    //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
+    //    Forward(20);
+    //    drive();
 
-     if(cmf>10)//nothing in front
-     {
-       Forward(10);
-       Alignment(cml, cmr);
-       drive();
-       toggleLD2(50);
-       continue;
-     }
-     else//turn left
-     {
-       //turn on the green led
-       HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
+    //    toggleLD2(50);
+    //    continue;
+    //  }
 
-       //turn left
-       turn_Angle(90,1);
+    //  if(cmf>10)//nothing in front
+    //  {
+    //    Forward(10);
+    //    Alignment(cml, cmr);
+    //    drive();
+    //    toggleLD2(50);
+    //    continue;
+    //  }
+    //  else//turn left
+    //  {
+    //    //turn on the green led
+    //    HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
 
-       //move the vehicle to the front a bit
-       Forward(15);
-       Left(0);
-       Turn_Left(0);
-       drive();
-       HAL_Delay(1000);
+    //    //turn left
+    //    turn_Angle(90,1);
 
-       //finish the turning
-       HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
-       Forward(20);
-       drive();
+    //    //move the vehicle to the front a bit
+    //    Forward(15);
+    //    Left(0);
+    //    Turn_Left(0);
+    //    drive();
+    //    HAL_Delay(1000);
 
-       toggleLD2(50);
-       continue;
-     }
+    //    //finish the turning
+    //    HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
+    //    Forward(20);
+    //    drive();
+
+    //    toggleLD2(50);
+    //    continue;
+    //  }
     /****************TASK 2******************/
   }
-
 
   /* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-  */
+   */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -1067,9 +1087,8 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
@@ -1082,10 +1101,10 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief LPUART1 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief LPUART1 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_LPUART1_UART_Init(void)
 {
 
@@ -1125,14 +1144,13 @@ static void MX_LPUART1_UART_Init(void)
   /* USER CODE BEGIN LPUART1_Init 2 */
 
   /* USER CODE END LPUART1_Init 2 */
-
 }
 
 /**
-  * @brief UART4 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief UART4 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_UART4_Init(void)
 {
 
@@ -1173,14 +1191,13 @@ static void MX_UART4_Init(void)
   /* USER CODE BEGIN UART4_Init 2 */
 
   /* USER CODE END UART4_Init 2 */
-
 }
 
 /**
-  * @brief UART5 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief UART5 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_UART5_Init(void)
 {
 
@@ -1221,14 +1238,13 @@ static void MX_UART5_Init(void)
   /* USER CODE BEGIN UART5_Init 2 */
 
   /* USER CODE END UART5_Init 2 */
-
 }
 
 /**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief USART1 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_USART1_UART_Init(void)
 {
 
@@ -1269,14 +1285,13 @@ static void MX_USART1_UART_Init(void)
   /* USER CODE BEGIN USART1_Init 2 */
 
   /* USER CODE END USART1_Init 2 */
-
 }
 
 /**
-  * @brief USART3 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief USART3 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_USART3_UART_Init(void)
 {
 
@@ -1317,14 +1332,13 @@ static void MX_USART3_UART_Init(void)
   /* USER CODE BEGIN USART3_Init 2 */
 
   /* USER CODE END USART3_Init 2 */
-
 }
 
 /**
-  * @brief TIM1 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief TIM1 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_TIM1_Init(void)
 {
 
@@ -1399,14 +1413,13 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
-
 }
 
 /**
-  * @brief TIM2 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief TIM2 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_TIM2_Init(void)
 {
 
@@ -1466,14 +1479,13 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
-
 }
 
 /**
-  * @brief TIM4 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief TIM4 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_TIM4_Init(void)
 {
 
@@ -1524,14 +1536,13 @@ static void MX_TIM4_Init(void)
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
-
 }
 
 /**
-  * @brief TIM5 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief TIM5 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_TIM5_Init(void)
 {
 
@@ -1586,19 +1597,18 @@ static void MX_TIM5_Init(void)
   /* USER CODE BEGIN TIM5_Init 2 */
 
   /* USER CODE END TIM5_Init 2 */
-
 }
 
 /**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -1611,7 +1621,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ldr_Pin|ldg_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, ldr_Pin | ldg_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -1627,7 +1637,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ldr_Pin ldg_Pin */
-  GPIO_InitStruct.Pin = ldr_Pin|ldg_Pin;
+  GPIO_InitStruct.Pin = ldr_Pin | ldg_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1637,16 +1647,16 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
 /**
-  * @brief  Retargets the C library printf function to the USART.
-  * @param  None
-  * @retval None
-  */
+ * @brief  Retargets the C library printf function to the USART.
+ * @param  None
+ * @retval None
+ */
 PUTCHAR_PROTOTYPE
 {
   /* Place your implementation of fputc here */
@@ -1659,9 +1669,9 @@ PUTCHAR_PROTOTYPE
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -1673,14 +1683,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
