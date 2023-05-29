@@ -364,65 +364,70 @@ void Alignment(double cmleft, double cmright)
 {
   // cmleft+=3;
   printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cmleft, cmright);
-  Inputultra = cmleft - cmright;
-  // Inputdistance = (cmleft + cmright) / 2;
+  Inputultra = cmleft-cmright;
+  Inputdistance = (cmleft + cmright) / 2;
 
   // if (PID_Compute(&myPIDdistance)==_FALSE)
   //   printf("PID_Compute for distance error\r\n");
 
-  // printf("Outputdistance = %.3f\r\n", Outputdistance);
-  // myPIDdistance.Compute();
-  //  if(Inputdistance < 15)
-  //  {
-  //    //go left
-  //    printf("Too close to wall\r\n");
-  //    HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
-  //    for(uint8_t i =0; i<=4;i++)
-  //    {
-  Forward(10);
-  //   Turn_Left(10);
-  //   drive();
-  //   HAL_Delay(500);
-  //   }
-  //   for(uint8_t i =0; i<=1;i++)
-  //   {
-  Forward(10);
-  //   Turn_Left(0);
-  //   drive();
-  //   HAL_Delay(500);
-  //   }
-  //   HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
-  // }
-  // else
-  // {
-  //   if(Inputdistance > 30)
-  //   {
-  //     //go right
-  //     printf("Too far from wall\r\n");
-  //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
-  //     for(uint8_t i =0; i<=4;i++)
-  //     {
-  Forward(10);
-  //     Turn_Right(10);
-  //     drive();
-  //     HAL_Delay(500);
-  //     }
-  //     for(uint8_t i =0; i<=1;i++)
-  //     {
-  Forward(10);
-  //     Turn_Right(0);
-  //     drive();
-  //     HAL_Delay(500);
-  //     }
-  //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
-  //   }
-  //   else
-  //   {
-  //     Turn_Left(0);
-  //   }
-  // }
+  //printf("Outputdistance = %.3f\r\n", Outputdistance);
+  //myPIDdistance.Compute();
+     if(Inputdistance < 15)
+     {
+       //go left
+      printf("Too close to wall\r\n");
+      HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
+      for(uint8_t i =0; i<=6;i++)
+      {
+      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+      Forward(10);
+      Turn_Left(5);
+      drive();
+      HAL_Delay(50);
+      }
+      for(uint8_t i =0; i<=3;i++)
+      {
+      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+      Forward(10);
+      Turn_Right(5);
+      drive();
+      HAL_Delay(50);
+      }
+      HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
+    }
+    else
+    {
+      if(Inputdistance > 30)
+      {
+        //go right
+        printf("Too far from wall\r\n");
+        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
+        for(uint8_t i =0; i<=6;i++)
+        {
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        Forward(5);
+        Turn_Right(5);
+        drive();
+        HAL_Delay(50);
+        }
+        for(uint8_t i =0; i<=3;i++)
+        {
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        Forward(5);
+        Turn_Left(5);
+        drive();
+        HAL_Delay(50);
+        }
+        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
+      }
+      else
+      {
+        Turn_Left(0);
+      }   
+    }
+  
 
-  if (PID_Compute(&myPIDultra) == _FALSE)
+  if (PID_Compute(&myPIDultra)==_FALSE)
     printf("PID_Compute for ultra error\r\n");
   printf("Outputultra = %.3f\r\n", Outputultra);
   // myPIDultra.Compute();
@@ -611,8 +616,8 @@ void turn_Angle(int angle, int direction)
     // Turn_Left(300); //增大目前角度
     // drive();
 
-    // Forward(10);
-    xflag = 2;
+    Forward(5);
+    xflag=1;
     drive();
 
     ATKPrcess();
@@ -696,8 +701,8 @@ void turn_Angle(int angle, int direction)
     // Left(0);
     // Turn_Right(300);//减小目前角度
     // drive();
-    // Forward(10);
-    yflag = 2;
+    Forward(5);
+    yflag=1;
     drive();
 
     ATKPrcess();
@@ -860,10 +865,10 @@ int main(void)
   // Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
   Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
 
-  // Recode initial Pitch
-  //  ATKPrcess();
-  //  initial_Pitch = pitch;
-  //  initial_selfAngelint = selfAngelint;
+  //Recode initial Pitch
+  //ATKPrcess();
+  //initial_Pitch = pitch;
+  //initial_selfAngelint = selfAngelint;
 
   int openmvAngle = 0;
   printf("Initialized. \r\n");
@@ -877,8 +882,16 @@ int main(void)
     /****************Test******************/
     // Set_angle(&htim2,TIM_CHANNEL_4, 65,20000,20);
     // turn_Angle(45, 2);
-    // turn_Angle(90, 2);
-    // HAL_Delay(5000);
+    //turn_Angle(90, 2);
+    //toggleLD2(1000);
+    //turn_Angle(90, 1);
+    //Forward(10);
+    //drive();
+    //toggleLD2(1000);
+    // Backward(10);
+    // drive();
+    //toggleLD2(1000);
+    //HAL_Delay(3000);
     // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
     // Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
     // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
@@ -985,12 +998,10 @@ int main(void)
     //    //turn on the red led
     //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-    //    //move the vehicle to the front a bit
-    //    Forward(15);
-    //    Left(0);
-    //    Turn_Left(0);
-    //    drive();
-    //    HAL_Delay(1000);
+       //finish the turning
+       HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
+       Forward(20);
+       drive();
 
     //    //stop the vehicle
     //    Forward(0);
@@ -999,15 +1010,21 @@ int main(void)
     //    drive();
     //    HAL_Delay(500);
 
-    //    //turn right
-    //    turn_Angle(90,2);
+     if(cmf>10)//nothing in front
+     {
+       Forward(10);
+       Alignment(cml, cmr);
+       drive();
+       toggleLD2(50);
+       continue;
+     }
+     else//turn left
+     {
+       //turn on the green led
+       HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
 
-    //    //move the vehicle to the front a bit
-    //    Forward(15);
-    //    Left(0);
-    //    Turn_Left(0);
-    //    drive();
-    //    HAL_Delay(1000);
+       //turn left
+       turn_Angle(90,1);
 
     //    //finish the turning
     //    HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
@@ -1018,37 +1035,9 @@ int main(void)
     //    continue;
     //  }
 
-    //  if(cmf>10)//nothing in front
-    //  {
-    //    Forward(10);
-    //    Alignment(cml, cmr);
-    //    drive();
-    //    toggleLD2(50);
-    //    continue;
-    //  }
-    //  else//turn left
-    //  {
-    //    //turn on the green led
-    //    HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
-
-    //    //turn left
-    //    turn_Angle(90,1);
-
-    //    //move the vehicle to the front a bit
-    //    Forward(15);
-    //    Left(0);
-    //    Turn_Left(0);
-    //    drive();
-    //    HAL_Delay(1000);
-
-    //    //finish the turning
-    //    HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
-    //    Forward(20);
-    //    drive();
-
-    //    toggleLD2(50);
-    //    continue;
-    //  }
+       toggleLD2(50);
+       continue;
+     }
     /****************TASK 2******************/
   }
 
