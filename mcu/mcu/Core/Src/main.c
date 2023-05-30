@@ -77,6 +77,12 @@ uint32_t timef_1 = 0;
 uint32_t timef_2 = 0; // right sensor
 double cmf = 0;       // cm of right sensor
 
+uint8_t ultraerrorcount_f=0;
+uint8_t ultraerrorcount_l=0;
+uint8_t ultraerrorcount_r=0;
+uint8_t lflag=0;
+uint8_t rflag=0;
+
 double Inputultra, Outputultra;
 double Setpointultra = 0;
 double Inputdistance, Outputdistance;
@@ -105,6 +111,7 @@ float roll, pitch, yaw; // ATK Return Value
 int selfAngelint;
 float initial_Pitch; // ATK Return Value
 int initial_selfAngelint;
+int openmvAngle=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -783,16 +790,17 @@ void turn_Angle(int angle, int direction)
   return;
 }
 
-void task (uint8_t i)
+void task (uint8_t numberoftask)
 {
-  switch (i)
+  switch (numberoftask)
   {
   case 1:
     /****************TASK 1******************/
-    int openmvAngle = GetOpemMv();
+    printf("task 1 begin\r\n");
+    openmvAngle = GetOpemMv();
     // openmvAngle=100;
 
-     Inputopenmv = openmvAngle;
+    Inputopenmv = openmvAngle;
     if (openmvAngle != HAL_ERROR)
     {
       printf("openmvangle=%d\r\n", openmvAngle);
@@ -814,102 +822,119 @@ void task (uint8_t i)
         Turn_Right((int)((-1) * Outputopenmv));
         drive();
       }
+      }
       printf("Outputopenmv = %.3f\r\n", Outputopenmv);
       if (openmvAngle >= -3 && openmvAngle <= 3)
       {
         Forward(10);
         drive();
         return;
-      }
-      if (openmvAngle > 0)
+      }      
+      printf("Outputopenmv = %.3f\r\n", Outputopenmv);
+      if (openmvAngle >= -3 && openmvAngle <= 3)
       {
-        Forward(15);
-        if (openmvAngle > 12)
-          Turn_Right((int)((openmvAngle / 30) * 10));
-        else
-          Turn_Right(5);
-        //  Turn_Right((int)Outputopenmv);
+        Forward(10);
         drive();
-        // toggleLD2(100);
-      }
-      else
-      {
-        Forward(15);
-        if (openmvAngle < -12)
-          Turn_Left((int)((-1) * openmvAngle / 30 * 10));
-        else
-          Turn_Left(5);
-        //  Turn_Left(-1 * (int)Outputopenmv);
-        drive();
-        // toggleLD2(100);
-      }
-    //   //  toggleLD2(50);
+        return;
     }
-    Left(0);
-    break;
     /****************TASK 1******************/
+    break;
   case 2:
     /****************TASK 2******************/
-
+    printf("task 2 begin\r\n");
       while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
       {
         //waiting for the counting to finish
-        toggleLD2(25);
+        toggleLD2(20);
+        //printf("waiting for the counting to finish\r\n");
       }
 
-      if (cml-cmr>50)//if the difference is too large, then turn right
+      if (cml>100)
+      {       
+        if(ultraerrorcount_l<2  && lflag != 1)
+        {
+          ultraerrorcount_l++;
+          return;//skip if there is error data
+        }
+        else
+        {
+          ultraerrorcount_l=0;
+          lflag = 1;
+        }
+      }
+      else{
+        lflag = 0;
+      }
+
+      if (cmr>100)
+      {       
+        if(ultraerrorcount_r<2  && rflag != 1)
+        {
+          ultraerrorcount_r++;
+          return;//skip if there is error data
+        }
+        else
+        {
+          ultraerrorcount_r=0;
+          rflag = 1;
+        }
+      }
+      else{
+        rflag = 0;
+      }
+
+      if (cml-cmr>80)//if the difference is too large, then turn right
       {
         //turn on the red led
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
+
+        Forward(20);
+        drive();
+        HAL_Delay(500);
+
+        turn_Angle(90,2);
 
         //finish the turning
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
         Forward(20);
         drive();
-
-        //stop the vehicle
-        Forward(0);
-        Left(0);
-        Turn_Left(0);
-        drive();
         HAL_Delay(500);
-
-      if(cmf>10)//nothing in front
-      {
-        Forward(10);
-        Alignment(cml, cmr);
-        drive();
-        toggleLD2(50);
         return;
       }
-      else//turn left
+
+      if(cmf<15)//turn left
       {
         //turn on the green led
         HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
 
-    //    //turn left
+        //turn left
         turn_Angle(90,1);
 
         //finish the turning
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
         Forward(20);
         drive();
+        return;
+      }
+      else//nothing in front
+      {
+        Forward(15);
+        Alignment(cml, cmr);
+        drive();
+        toggleLD2(50);
+        return;      
+      }
 
-      toggleLD2(50);
-      return;
-    }
-
-      toggleLD2(50);
-      return;
-    }
     /****************TASK 2******************/
     break;
   
   default:
+    printf("task fall\r\n");
+
     HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
     while(1)
     {
-      printf("Error Task number!\r\n")
+      printf("Error Task number!\r\n");
     }
     break;
   }
@@ -959,6 +984,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  printf("Starting\r\n");
   // Load parameters to PID
   PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra, 1, 2, 0.05, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDultra, _PID_MODE_AUTOMATIC);
@@ -1006,9 +1032,9 @@ int main(void)
 
     /****************Test******************/
     // Set_angle(&htim2,TIM_CHANNEL_4, 65,20000,20);
-    // turn_Angle(45, 2);
+    turn_Angle(45, 2);
     //turn_Angle(90, 2);
-    //toggleLD2(1000);
+    toggleLD2(1000);
     //turn_Angle(90, 1);
     //Forward(10);
     //drive();
@@ -1038,6 +1064,7 @@ int main(void)
 
     // turn_Angle(60, 1);
 
+
     // HAL_Delay(5000);
     //  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
@@ -1047,7 +1074,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     
-    task(2);
+    // task(2);
   }
 
   /* USER CODE END 3 */
