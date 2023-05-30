@@ -789,7 +789,7 @@ void task (uint8_t i)
   {
   case 1:
     /****************TASK 1******************/
-    openmvAngle = GetOpemMv();
+    int openmvAngle = GetOpemMv();
     // openmvAngle=100;
 
      Inputopenmv = openmvAngle;
@@ -819,7 +819,7 @@ void task (uint8_t i)
       {
         Forward(10);
         drive();
-        continue;
+        return;
       }
       if (openmvAngle > 0)
       {
@@ -880,7 +880,7 @@ void task (uint8_t i)
         Alignment(cml, cmr);
         drive();
         toggleLD2(50);
-        continue;
+        return;
       }
       else//turn left
       {
@@ -996,7 +996,6 @@ int main(void)
   //initial_Pitch = pitch;
   //initial_selfAngelint = selfAngelint;
 
-  int openmvAngle = 0;
   printf("Initialized. \r\n");
   /* USER CODE END 2 */
 
@@ -1010,10 +1009,10 @@ int main(void)
     // turn_Angle(45, 2);
     //turn_Angle(90, 2);
     //toggleLD2(1000);
-    turn_Angle(90, 1);
+    //turn_Angle(90, 1);
     //Forward(10);
     //drive();
-    toggleLD2(1000);
+    //toggleLD2(1000);
     // Backward(10);
     // drive();
     //toggleLD2(1000);
@@ -1043,6 +1042,7 @@ int main(void)
     //  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
     // HAL_Delay(10000);
+    /****************Test******************/
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
