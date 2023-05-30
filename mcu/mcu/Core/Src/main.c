@@ -454,6 +454,52 @@ void Alignment(double cmleft, double cmright)
   }
 }
 
+void superAlignment(double precision)
+{
+  printf("Super Alignment Started.\r\n");
+  
+  while (1)
+  {
+    while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
+      {
+        HAL_Delay(5);
+      }
+      //printf("cm left = %.3f, cm right = %.3f\r\n", cml, cmr);
+      cml+=1;
+      Inputultra = cml-cmr;
+
+    if((cml-cmr<precision) && (cml-cmr)>(-1*precision))
+    {
+      printf("Super Alignment Finished.\r\n");
+      Forward(0);
+      drive();
+      return;
+    }
+    else
+    {
+      if (PID_Compute(&myPIDultra)==_FALSE)
+        printf("PID_Compute for ultra error\r\n");
+      printf("Outputultra = %.3f\r\n", Outputultra);
+  
+      if (Outputultra > 0)
+      {
+        Forward((uint8_t)(Outputultra));
+        xflag=1;
+      }
+      else
+      {
+        Forward((int)(-1*Outputultra));
+        yflag=1;
+      }
+      drive();
+
+      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+      HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+      HAL_Delay(500);
+    }
+  }
+}
+
 uint8_t hc12send(uint8_t data)
 {
   return HAL_UART_Transmit(&huart5, &data, 1, 100);
@@ -998,9 +1044,9 @@ int main(void)
   Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
 
   //Recode initial Pitch
-  ATKPrcess();
-  initial_Pitch = pitch;
-  initial_selfAngelint = selfAngelint;
+  // ATKPrcess();
+  // initial_Pitch = pitch;
+  // initial_selfAngelint = selfAngelint;
 
   printf("Initialized. \r\n");
   /* USER CODE END 2 */
@@ -1032,11 +1078,12 @@ int main(void)
     // drive();
     // toggleLD2(500);
 
-    // Forward(0);
+    superAlignment(0.5);
+    // Forward(10);
     // Left(0);
     // Turn_Left(0);
     // drive();
-    // toggleLD2(1000);
+     toggleLD2(1000);
 
     // HAL_Delay(5000);
     // Set_angle(&htim2,TIM_CHANNEL_1, 150,20000,20);
@@ -1053,8 +1100,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    
-    task(2);
+
+    //just type the task number below
+    //task(2);
   }
 
   /* USER CODE END 3 */
