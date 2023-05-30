@@ -582,8 +582,6 @@ void Set_angle(TIM_HandleTypeDef *htim, uint32_t Channel, uint8_t angle, uint32_
 
 int GetOpemMv() // Return Turn Angle
 {
-  printf("ok\r\n");
-
   uint8_t r = 0;
   char Mvbuf[10];
   char *frame;
@@ -618,6 +616,27 @@ int GetOpemMv() // Return Turn Angle
   if (Mvbuf[r] == 'a')
     return TurnAngle;
   return HAL_ERROR;
+}
+
+char GetOpemMvArrow() // Return Turn Angle
+{
+  uint8_t r = 0;
+  char Mvbuf[10];
+
+  UART_ENABLE_RE(huart3);
+  if (HAL_UART_Receive(&huart3, (uint8_t *)Mvbuf, 2, HAL_MAX_DELAY) == HAL_ERROR) 
+  {
+    UART_DISABLE_RE(huart3); // error
+    return HAL_ERROR;
+  }
+  UART_DISABLE_RE(huart3);
+
+  if (Mvbuf[0] == 'b' && Mvbuf[1] == '1')
+    return '1';
+  if (Mvbuf[0] == 'b' && Mvbuf[1] == '2')
+    return '2';
+  if (Mvbuf[0] == 'b' && Mvbuf[1] == '3')
+    return '3';
 }
 
 void turn_Angle(int angle, int direction)
@@ -832,8 +851,16 @@ void task (uint8_t numberoftask)
       if (PID_Compute(&myPIDopenmv)==_FALSE)
         printf("PID_Compute for OpenMV error\r\n");
 
+      printf("Outputopenmv = %.3f\r\n", Outputopenmv);
       printf("Outputopenmv = %d\r\n", (int)Outputopenmv);
 
+      if (openmvAngle >= -3 && openmvAngle <= 3)
+      {
+        Forward(10);
+        drive();
+        return;
+      }      
+      
       if(Outputopenmv > 0)
       {
         Forward(15);
@@ -846,20 +873,7 @@ void task (uint8_t numberoftask)
         Turn_Right((int)((-1) * Outputopenmv));
         drive();
       }
-      }
-      printf("Outputopenmv = %.3f\r\n", Outputopenmv);
-      if (openmvAngle >= -3 && openmvAngle <= 3)
-      {
-        Forward(10);
-        drive();
-        return;
-      }      
-      printf("Outputopenmv = %.3f\r\n", Outputopenmv);
-      if (openmvAngle >= -3 && openmvAngle <= 3)
-      {
-        Forward(10);
-        drive();
-        return;
+      
     }
     /****************TASK 1******************/
     break;
@@ -1048,6 +1062,19 @@ int main(void)
   // initial_Pitch = pitch;
   // initial_selfAngelint = selfAngelint;
 
+  // UART_ENABLE_RE(huart3);
+  // if (HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY) == HAL_ERROR) 
+  // {
+  //   UART_DISABLE_RE(huart3); // error
+  //   return HAL_ERROR;
+  // }
+  // UART_DISABLE_RE(huart3);
+  HAL_Delay(5000);
+  UART_ENABLE_RE(huart3);
+  HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY);
+  UART_DISABLE_RE(huart3);
+  
+
   printf("Initialized. \r\n");
   /* USER CODE END 2 */
 
@@ -1078,7 +1105,7 @@ int main(void)
     // drive();
     // toggleLD2(500);
 
-    superAlignment(0.5);
+    // superAlignment(0.5);
     // Forward(10);
     // Left(0);
     // Turn_Left(0);
