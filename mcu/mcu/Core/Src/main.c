@@ -459,11 +459,11 @@ void Alignment(double cmleft, double cmright)
     //}
   }
   // Serial.print("Echoleft,right =");
-  // Serial.print(templeft);//串口输出等待时间的原始数�?????????
+  // Serial.print(templeft);//串口输出等待时间的原始数�??????????
   // Serial.print(",");
   // Serial.print(tempright);
   // Serial.print(" | | Distanceleft,right = ");
-  // Serial.print(cmleft);//串口输出距离换算成cm的结�?????????
+  // Serial.print(cmleft);//串口输出距离换算成cm的结�??????????
   // Serial.print(",");
   // Serial.print(cmright);
   // Serial.println("cm");
@@ -483,13 +483,14 @@ int atkAngleRound(int a)
 {
   return ((a + 360) % 360);
 }
+
 void ATKPrcess() // update ATK value
 {
   int r = 0;
   char ATKbuf[100];
 
   UART_ENABLE_RE(huart1);
-  if (HAL_UART_Receive(&huart1, (uint8_t *)ATKbuf, 20, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
+  if (HAL_UART_Receive(&huart1, (uint8_t *)ATKbuf, 60, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
   {
     UART_DISABLE_RE(huart1); // error
     return;
@@ -501,32 +502,23 @@ void ATKPrcess() // update ATK value
   // SendPC(ATKbuf, 30);
 
   char ATKframes[10];
-  for (r = 3; r < 20; r++)
+
+  for (r = 2; r < 60; r++)
   { // Find the Report message
-    if ((ATKbuf[r - 3] == 0x55 && ATKbuf[r - 2] == 0x55) && ATKbuf[r - 1] == 0x01)
+    if ((ATKbuf[r - 2] == 0x55 && ATKbuf[r - 1] == 0x53))
     {
-      int i = 0, N = ATKbuf[r];
-      char *tmp = &ATKbuf[r + 1];
+      int i = 0, N = 8;
+      char *tmp = &ATKbuf[r];
 
-      // char pp[] = "\x90\x90\x90\x90";
-      // SendPC(pp, 4);
-      // SendPC(tmp, 8);
-
-      uint8_t sum = 0x55 + 0x55 + 0x01 + N; // checksum
       for (i = 0; i < N; i++)
       {
         ATKframes[i] = tmp[i];
-        sum += tmp[i];
       }
-
-      if (sum == tmp[i])
-      {
-        break; // if checksum pass
-      }
+      break;
     }
   }
 
-  if (r == 20) // Do not find the correct reply
+  if (r == 60) // Do not find the correct reply
   {
     return;
   }
@@ -645,13 +637,15 @@ void turn_Angle(int angle, int direction)
       tolAngle += comAngle[n];
       avgAngle = (int)(tolAngle / 3);
       n = (n + 1) % 3;
-      if (avgAngle == (angle - 3) && avgAngle <= (angle + 3))
+      if (avgAngle == (angle - 2) && avgAngle <= (angle + 2))
         break;
 
       if (avgAngle >= (angle / 2) && avgAngle <= (angle + 3) && flag == 1)
       {
         flag = 2;
-        Forward(0);
+        Forward(2);
+        xflag=1;
+        drive();
         // Left(0);
         // Turn_Left(300); //增大目前角度
         // drive();
@@ -670,7 +664,6 @@ void turn_Angle(int angle, int direction)
       // SendPCint(aimAngle);
     }
 
-    Forward(0);
     // Left(0);
     // Turn_Left(0);
     // drive();
@@ -680,7 +673,6 @@ void turn_Angle(int angle, int direction)
     // if (atkAngleRound(selfAngelint - iniAngle) >= (angle-1) && atkAngleRound(selfAngelint - iniAngle) <= (angle+1))
     //   return;
 
-    Forward(0);
     // Left(0);
     // Turn_Right(150); //减小目前角度
     // drive();
@@ -735,7 +727,9 @@ void turn_Angle(int angle, int direction)
       if (avgAngle >= (angle / 2) && avgAngle <= (angle + 7) && flag == 1)
       {
         flag = 2;
-        Forward(0);
+        Forward(2);
+        yflag=1;
+        drive();
         // Left(0);
         // Turn_Right(400); //增大目前角度
         // drive();
@@ -928,9 +922,9 @@ void task (uint8_t i)
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -1016,10 +1010,10 @@ int main(void)
     // turn_Angle(45, 2);
     //turn_Angle(90, 2);
     //toggleLD2(1000);
-    //turn_Angle(90, 1);
+    turn_Angle(90, 1);
     //Forward(10);
     //drive();
-    //toggleLD2(1000);
+    toggleLD2(1000);
     // Backward(10);
     // drive();
     //toggleLD2(1000);
@@ -1060,21 +1054,21 @@ int main(void)
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-   */
+  */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
 
   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -1091,8 +1085,9 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
@@ -1105,10 +1100,10 @@ void SystemClock_Config(void)
 }
 
 /**
- * @brief LPUART1 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief LPUART1 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_LPUART1_UART_Init(void)
 {
 
@@ -1148,13 +1143,14 @@ static void MX_LPUART1_UART_Init(void)
   /* USER CODE BEGIN LPUART1_Init 2 */
 
   /* USER CODE END LPUART1_Init 2 */
+
 }
 
 /**
- * @brief UART4 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief UART4 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_UART4_Init(void)
 {
 
@@ -1195,13 +1191,14 @@ static void MX_UART4_Init(void)
   /* USER CODE BEGIN UART4_Init 2 */
 
   /* USER CODE END UART4_Init 2 */
+
 }
 
 /**
- * @brief UART5 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief UART5 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_UART5_Init(void)
 {
 
@@ -1242,13 +1239,14 @@ static void MX_UART5_Init(void)
   /* USER CODE BEGIN UART5_Init 2 */
 
   /* USER CODE END UART5_Init 2 */
+
 }
 
 /**
- * @brief USART1 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_USART1_UART_Init(void)
 {
 
@@ -1260,7 +1258,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -1289,13 +1287,14 @@ static void MX_USART1_UART_Init(void)
   /* USER CODE BEGIN USART1_Init 2 */
 
   /* USER CODE END USART1_Init 2 */
+
 }
 
 /**
- * @brief USART3 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_USART3_UART_Init(void)
 {
 
@@ -1336,13 +1335,14 @@ static void MX_USART3_UART_Init(void)
   /* USER CODE BEGIN USART3_Init 2 */
 
   /* USER CODE END USART3_Init 2 */
+
 }
 
 /**
- * @brief TIM1 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_TIM1_Init(void)
 {
 
@@ -1417,13 +1417,14 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
+
 }
 
 /**
- * @brief TIM2 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_TIM2_Init(void)
 {
 
@@ -1483,13 +1484,14 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
+
 }
 
 /**
- * @brief TIM4 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_TIM4_Init(void)
 {
 
@@ -1540,13 +1542,14 @@ static void MX_TIM4_Init(void)
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
+
 }
 
 /**
- * @brief TIM5 Initialization Function
- * @param None
- * @retval None
- */
+  * @brief TIM5 Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_TIM5_Init(void)
 {
 
@@ -1601,18 +1604,19 @@ static void MX_TIM5_Init(void)
   /* USER CODE BEGIN TIM5_Init 2 */
 
   /* USER CODE END TIM5_Init 2 */
+
 }
 
 /**
- * @brief GPIO Initialization Function
- * @param None
- * @retval None
- */
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  /* USER CODE BEGIN MX_GPIO_Init_1 */
-  /* USER CODE END MX_GPIO_Init_1 */
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -1625,7 +1629,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ldr_Pin | ldg_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, ldr_Pin|ldg_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -1641,7 +1645,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ldr_Pin ldg_Pin */
-  GPIO_InitStruct.Pin = ldr_Pin | ldg_Pin;
+  GPIO_InitStruct.Pin = ldr_Pin|ldg_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1651,8 +1655,8 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
-  /* USER CODE END MX_GPIO_Init_2 */
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -1673,9 +1677,9 @@ PUTCHAR_PROTOTYPE
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -1687,14 +1691,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
