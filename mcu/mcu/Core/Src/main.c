@@ -369,111 +369,89 @@ void Turn_Right(uint8_t speed)
 
 void Alignment(double cmleft, double cmright)
 {
-  // cmleft+=3;
   printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cmleft, cmright);
   Inputultra = cmleft-cmright;
-  Inputdistance = (cmleft + cmright) / 2;
 
-  // if (PID_Compute(&myPIDdistance)==_FALSE)
-  //   printf("PID_Compute for distance error\r\n");
+  //When previous process have not been finished, do nothing, just align
+  if ((cmleft-cmright>2)||(cmleft-cmright<-2))
+  {
+    if (PID_Compute(&myPIDultra)==_FALSE)
+      printf("PID_Compute for ultra error\r\n");
+    printf("Outputultra = %.3f\r\n", Outputultra);
 
-  //printf("Outputdistance = %.3f\r\n", Outputdistance);
-  //myPIDdistance.Compute();
-     if(Inputdistance < 15)
-     {
-       //go left
-      printf("Too close to wall\r\n");
-      HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
-      for(uint8_t i =0; i<=6;i++)
-      {
+    if (Outputultra >= 0)
+      Turn_Left((uint8_t)Outputultra);
+    else
+      Turn_Right((uint8_t)(-Outputultra));
+    return;
+  }
+
+  if((cmleft < 15)&&(cmright < 15))
+  {
+    //go left
+    printf("Too close to wall\r\n");
+    HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
+    for(uint8_t i =0; i<=9;i++)
+    {
       HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
       Forward(10);
-      Turn_Left(5);
+      Turn_Left(8);
       drive();
-      HAL_Delay(50);
-      }
-      for(uint8_t i =0; i<=3;i++)
+      HAL_Delay(100);
+    }
+    HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+    Forward(10);
+    Turn_Right(0);
+    drive();
+    HAL_Delay(1000);
+    HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
+    return;
+  }
+  else
+  {
+    if((cmleft > 30)&&(cmright > 30))
+    {
+      //go right
+      printf("Too far from wall\r\n");
+      HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
+      for(uint8_t i =0; i<=9;i++)
       {
-      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-      Forward(10);
-      Turn_Right(5);
-      drive();
-      HAL_Delay(50);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        Forward(10);
+        Turn_Right(8);
+        drive();
+        HAL_Delay(100);
       }
-      HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
+      HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+      Forward(10);
+      Turn_Left(0);
+      drive();
+      HAL_Delay(1000);
+      HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
+      return;
+
     }
     else
     {
-      if(Inputdistance > 30)
-      {
-        //go right
-        printf("Too far from wall\r\n");
-        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
-        for(uint8_t i =0; i<=6;i++)
-        {
-        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-        Forward(5);
-        Turn_Right(5);
-        drive();
-        HAL_Delay(50);
-        }
-        for(uint8_t i =0; i<=3;i++)
-        {
-        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-        Forward(5);
-        Turn_Left(5);
-        drive();
-        HAL_Delay(50);
-        }
-        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
-      }
-      else
-      {
-        Turn_Left(0);
-      }   
-    }
+      //do nothing
+      Turn_Left(0);
+    }   
+  } 
+    
   
 
   if (PID_Compute(&myPIDultra)==_FALSE)
     printf("PID_Compute for ultra error\r\n");
   printf("Outputultra = %.3f\r\n", Outputultra);
-  // myPIDultra.Compute();
 
   if (Outputultra >= 0)
   {
-    // if(Inputultra < 1)
-    // {
-    //   //print(Inputultra);
-    //   Turn_Right(1);
-    // }
-    // else
-    // {
     Turn_Left((uint8_t)Outputultra);
-    // print(Inputultra);
-    //}
   }
   else
   {
-    // if(Inputultra > -1)
-    // {
-    //   //print(Inputultra);
-    //   Turn_Left(1);
-    // }
-    // else
-    // {
     Turn_Right((uint8_t)(-Outputultra));
-    // print(Inputultra);
-    //}
   }
-  // Serial.print("Echoleft,right =");
-  // Serial.print(templeft);//串口输出等待时间的原始数�??????????
-  // Serial.print(",");
-  // Serial.print(tempright);
-  // Serial.print(" | | Distanceleft,right = ");
-  // Serial.print(cmleft);//串口输出距离换算成cm的结�??????????
-  // Serial.print(",");
-  // Serial.print(cmright);
-  // Serial.println("cm");
 }
 
 uint8_t hc12send(uint8_t data)
@@ -849,6 +827,7 @@ void task (uint8_t numberoftask)
         //printf("waiting for the counting to finish\r\n");
       }
 
+      //remove strange datas
       if (cml>100)
       {       
         if(ultraerrorcount_l<2  && lflag != 1)
@@ -883,7 +862,9 @@ void task (uint8_t numberoftask)
         rflag = 0;
       }
 
-      if (cml-cmr>80)//if the difference is too large, then turn right
+      cml+=1;//remove fixed error
+
+      if (cmr-cml>100)//if the difference is too large, then turn right
       {
         //turn on the red led
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
@@ -902,7 +883,7 @@ void task (uint8_t numberoftask)
         return;
       }
 
-      if(cmf<15)//turn left
+      if(cmf<25)//turn left
       {
         //turn on the green led
         HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
@@ -929,7 +910,6 @@ void task (uint8_t numberoftask)
     break;
   
   default:
-    printf("task fall\r\n");
 
     HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
     while(1)
@@ -986,15 +966,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("Starting\r\n");
   // Load parameters to PID
-  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra, 1, 2, 0.05, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra, 1, 2, 0.2, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDultra, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&myPIDultra, 50);
   PID_SetOutputLimits(&myPIDultra, -10, 10);
 
-  PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance, 0.8, 200, 15, _PID_P_ON_E, _PID_CD_DIRECT);
-  PID_SetMode(&myPIDdistance, _PID_MODE_AUTOMATIC);
-  PID_SetSampleTime(&myPIDdistance, 50);
-  PID_SetOutputLimits(&myPIDdistance, -20, 20);
+  // PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance, 0.8, 200, 15, _PID_P_ON_E, _PID_CD_DIRECT);
+  // PID_SetMode(&myPIDdistance, _PID_MODE_AUTOMATIC);
+  // PID_SetSampleTime(&myPIDdistance, 50);
+  // PID_SetOutputLimits(&myPIDdistance, -20, 20);
 
   PID(&myPIDopenmv, &Inputopenmv, &Outputopenmv, &Setpointopenmv, 0.2, 0, 0.2, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDopenmv, _PID_MODE_AUTOMATIC);
@@ -1018,9 +998,9 @@ int main(void)
   Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
 
   //Recode initial Pitch
-  //ATKPrcess();
-  //initial_Pitch = pitch;
-  //initial_selfAngelint = selfAngelint;
+  ATKPrcess();
+  initial_Pitch = pitch;
+  initial_selfAngelint = selfAngelint;
 
   printf("Initialized. \r\n");
   /* USER CODE END 2 */
@@ -1032,9 +1012,9 @@ int main(void)
 
     /****************Test******************/
     // Set_angle(&htim2,TIM_CHANNEL_4, 65,20000,20);
-    turn_Angle(45, 2);
+    //turn_Angle(45, 2);
     //turn_Angle(90, 2);
-    toggleLD2(1000);
+    //toggleLD2(1000);
     //turn_Angle(90, 1);
     //Forward(10);
     //drive();
@@ -1074,7 +1054,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     
-    // task(2);
+    task(2);
   }
 
   /* USER CODE END 3 */
