@@ -679,6 +679,21 @@ char GetOpemMvArrow() // Return Turn Angle
     return '3';
 }
 
+char walkStraight() // Return Turn Angle
+{
+  int relativeAngle = 0;
+
+  if(atkAngleRound(selfAngelint - initial_selfAngelint) > 90)
+    relativeAngle = atkAngleRound(initial_selfAngelint - selfAngelint);
+  else
+    relativeAngle = atkAngleRound(selfAngelint - initial_selfAngelint);
+
+  Forward(10);
+  gyroAlignment(relativeAngle);
+  drive();
+  toggleld2(50);
+}
+
 void turn_Angle(int angle, int direction)
 {
   int aimAngle = 0;
