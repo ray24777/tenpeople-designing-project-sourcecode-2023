@@ -91,10 +91,15 @@ double Setpointdistance = 15;
 double Inputopenmv, Outputopenmv;
 double Setpointopenmv = 0;
 
+double Inputgyro, Outputgyro;
+double Setpointgyro = 0;
+
 PID_TypeDef myPIDultra;    // PID structure
 PID_TypeDef myPIDdistance; // PID structure
 
 PID_TypeDef myPIDopenmv; // PID structure
+
+PID_TypeDef myPIDgyro; // PID structure
 
 int xspeed = 0;    // speed of x axis
 uint8_t xflag = 0; // 2: forward, 1: backward
@@ -372,6 +377,30 @@ void Turn_Right(uint8_t speed)
     yflag = 2;
   }
 }
+
+void gyroAlignment(double input)
+{
+  Inputgyro = input;
+  if (PID_Compute(&myPIDgyro)==_FALSE)
+      printf("PID_Compute for gyro error\r\n");
+    printf("Outputgyro = %.3f\r\n", Outputgyro);
+
+  if (Outputgyro > 0)
+  {
+    Turn_Left((uint8_t)Outputgyro);
+  }
+  else
+  {
+    Turn_Right((uint8_t)(-Outputgyro));
+  }
+}
+/***example***/
+//in task function
+//Forward(10);
+//gyroAlignment(angle);
+//drive();
+//toggleld2(50);
+/***example***/
 
 void Alignment(double cmleft, double cmright)
 {
@@ -1160,6 +1189,11 @@ int main(void)
   PID_SetMode(&myPIDopenmv, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&myPIDopenmv, 100);
   PID_SetOutputLimits(&myPIDopenmv, -10, 10);
+
+  PID(&myPIDgyro, &Inputgyro, &Outputgyro, &Setpointgyro, 1.2, 1, 0.8, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID_SetMode(&myPIDgyro, _PID_MODE_AUTOMATIC);
+  PID_SetSampleTime(&myPIDgyro, 50);
+  PID_SetOutputLimits(&myPIDgyro, -10, 10);
 
   // start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
