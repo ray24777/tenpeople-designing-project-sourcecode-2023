@@ -387,6 +387,7 @@ void gyroAlignment(double input)
 
   if (Outputgyro > 0.5)
   {
+
     Turn_Left((uint8_t)Outputgyro);
   }
   if (Outputgyro < -0.5)
@@ -904,15 +905,7 @@ void task (uint8_t numberoftask)
         printf("PID_Compute for OpenMV error\r\n");
 
       printf("Outputopenmv = %.3f\r\n", Outputopenmv);
-      printf("Outputopenmv = %d\r\n", (int)Outputopenmv);
 
-      if (openmvAngle >= -3 && openmvAngle <= 3)
-      {
-        Forward(10);
-        drive();
-        return;
-      }      
-      
       if(Outputopenmv > 0)
       {
         Forward(15);
@@ -925,7 +918,8 @@ void task (uint8_t numberoftask)
         Turn_Right((int)((-1) * Outputopenmv));
         drive();
       }
-      
+      toggleLD2(25);
+      return;
     }
     /****************TASK 1******************/
     break;
@@ -1189,15 +1183,15 @@ int main(void)
   PID_SetSampleTime(&myPIDdistance, 50);
   PID_SetOutputLimits(&myPIDdistance, -5, 5);
 
-  PID(&myPIDopenmv, &Inputopenmv, &Outputopenmv, &Setpointopenmv, 0.2, 0, 0.2, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDopenmv, &Inputopenmv, &Outputopenmv, &Setpointopenmv, 0.2, 0, 0.12, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDopenmv, _PID_MODE_AUTOMATIC);
-  PID_SetSampleTime(&myPIDopenmv, 100);
+  PID_SetSampleTime(&myPIDopenmv, 170);
   PID_SetOutputLimits(&myPIDopenmv, -10, 10);
 
   PID(&myPIDgyro, &Inputgyro, &Outputgyro, &Setpointgyro, 1.2, 1, 0.8, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDgyro, _PID_MODE_AUTOMATIC);
-  PID_SetSampleTime(&myPIDgyro, 50);
-  PID_SetOutputLimits(&myPIDgyro, -10, 10);
+  PID_SetSampleTime(&myPIDgyro, 100);
+  PID_SetOutputLimits(&myPIDgyro, -5, 5);
 
   // start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -1216,9 +1210,9 @@ int main(void)
   Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
 
   //Recode initial Pitch
-  ATKPrcess();
-  initial_Pitch = pitch;
-  initial_selfAngelint = selfAngelint;
+  // ATKPrcess();
+  // initial_Pitch = pitch;
+  // initial_selfAngelint = selfAngelint;
 
   // UART_ENABLE_RE(huart3);
   // if (HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY) == HAL_ERROR) 
@@ -1227,10 +1221,10 @@ int main(void)
   //   return HAL_ERROR;
   // }
   // UART_DISABLE_RE(huart3);
-  HAL_Delay(5000);
-  UART_ENABLE_RE(huart3);
-  HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY);
-  UART_DISABLE_RE(huart3);
+  //HAL_Delay(5000);
+  //UART_ENABLE_RE(huart3);
+  //HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY);
+  //UART_DISABLE_RE(huart3);
   
   HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
   printf("Initialized. \r\n");
@@ -1287,7 +1281,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     //just type the task number below
-    task(2);
+    task(1);
   }
 
   /* USER CODE END 3 */
