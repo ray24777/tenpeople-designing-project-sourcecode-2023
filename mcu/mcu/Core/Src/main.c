@@ -112,6 +112,10 @@ int selfAngelint;
 float initial_Pitch; // ATK Return Value
 int initial_selfAngelint;
 int openmvAngle=0;
+
+uint8_t turnLeftCounter=0;
+uint8_t turnRightCounter=0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -832,7 +836,20 @@ void turn_Angle(int angle, int direction)
   toggleLD2(100);
   return;
 }
-
+void celebrate()
+{
+  while (1)
+      {
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        toggleLD2(100);
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        toggleLD2(100);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        toggleLD2(100);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        toggleLD2(100);
+      }
+}
 void task (uint8_t numberoftask)
 {
   switch (numberoftask)
@@ -880,6 +897,86 @@ void task (uint8_t numberoftask)
   case 2:
     /****************TASK 2******************/
     printf("task 2 begin\r\n");
+
+    if (turnLeftCounter==2 && turnRightCounter==2)
+    {
+      printf("Going to the busket.\r\n");
+
+      superAlignment(1);
+
+      for (int i = 0; i < 6; i++)
+      {
+        Forward(15);
+        drive();
+        toggleLD2(500);
+      }
+      //stop 
+      Forward(0);
+      drive();
+      toggleLD2(500);
+      //throw the ball
+      Set_angle(&htim2,TIM_CHANNEL_1, 150,20000,20);
+      toggleLD2(1000);
+      Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
+
+      //go back
+      for (int i = 0; i < 4; i++)
+      {
+        Backward(15);
+        drive();
+        toggleLD2(500);
+      }
+      superAlignment(1);
+      
+
+      //turn right
+        //turn on the green led
+        HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
+
+        //turn left
+        turn_Angle(90,2);
+
+        //finish the turning
+        HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
+
+      Backward(15);
+      drive();
+
+      while (1)//detect the planter
+      {
+        while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
+        {
+          //waiting for the counting to finish
+          toggleLD2(20);
+        }
+        if(cml<80||cmr<80)
+        {
+          Forward(0);
+          drive();
+          toggleLD2(500);
+          break;
+        }
+        Backward(15);
+        drive();
+        toggleLD2(500);
+      }
+      hc12send('a');
+      toggleLD2(500);
+
+      //FINISH THE TASK
+
+      for (uint8_t i = 0; i < 6; i++)
+      {
+        Backward(15);
+        drive();
+        toggleLD2(500);
+      }
+      
+      Backward(0);
+      drive();
+      celebrate();
+      
+    }
       while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
       {
         //waiting for the counting to finish
@@ -926,10 +1023,11 @@ void task (uint8_t numberoftask)
 
       if (cmr-cml>100)//if the difference is too large, then turn right
       {
+         turnRightCounter++;
         //turn on the red led
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-        Forward(20);
+        Forward(15);
         drive();
         HAL_Delay(500);
 
@@ -937,7 +1035,7 @@ void task (uint8_t numberoftask)
 
         //finish the turning
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-        Forward(20);
+        Forward(15);
         drive();
         HAL_Delay(500);
         return;
@@ -945,6 +1043,7 @@ void task (uint8_t numberoftask)
 
       if(cmf<25)//turn left
       {
+        turnLeftCounter++;
         //turn on the green led
         HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
 
@@ -953,7 +1052,7 @@ void task (uint8_t numberoftask)
 
         //finish the turning
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-        Forward(20);
+        Forward(15);
         drive();
         return;
       }
