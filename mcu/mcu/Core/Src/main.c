@@ -385,11 +385,11 @@ void gyroAlignment(double input)
       printf("PID_Compute for gyro error\r\n");
     printf("Outputgyro = %.3f\r\n", Outputgyro);
 
-  if (Outputgyro > 0)
+  if (Outputgyro > 0.5)
   {
     Turn_Left((uint8_t)Outputgyro);
   }
-  else
+  if (Outputgyro < -0.5)
   {
     Turn_Right((uint8_t)(-Outputgyro));
   }

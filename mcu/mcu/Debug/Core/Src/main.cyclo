@@ -11,7 +11,7 @@ main.c:319:6:Forward	1
 main.c:327:6:Backward	1
 main.c:335:6:Turn_Left	3
 main.c:358:6:Turn_Right	3
-main.c:381:6:gyroAlignment	3
+main.c:381:6:gyroAlignment	4
 main.c:405:6:Alignment	7
 main.c:492:6:superAlignment	8
 main.c:538:9:hc12send	1
