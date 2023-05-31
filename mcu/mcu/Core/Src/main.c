@@ -86,7 +86,7 @@ uint8_t rflag=0;
 double Inputultra, Outputultra;
 double Setpointultra = 0;
 double Inputdistance, Outputdistance;
-double Setpointdistance = 20;
+double Setpointdistance = 15;
 
 double Inputopenmv, Outputopenmv;
 double Setpointopenmv = 0;
@@ -115,6 +115,8 @@ int openmvAngle=0;
 
 uint8_t turnLeftCounter=0;
 uint8_t turnRightCounter=0;
+
+uint32_t timecount=200;
 
 /* USER CODE END PV */
 
@@ -390,57 +392,57 @@ void Alignment(double cmleft, double cmright)
     return;
   }
 
-  if((cmleft < 15)&&(cmright < 15))
-  {
-    //go left
-    printf("Too close to wall\r\n");
-    HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
-    for(uint8_t i =0; i<=9;i++)
-    {
-      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-      Forward(10);
-      Turn_Left(8);
-      drive();
-      HAL_Delay(100);
-    }
-    HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-    Forward(10);
-    Turn_Right(0);
-    drive();
-    HAL_Delay(1000);
-    HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
-    return;
-  }
-  else
-  {
-    if((cmleft > 30)&&(cmright > 30))
-    {
-      //go right
-      printf("Too far from wall\r\n");
-      HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
-      for(uint8_t i =0; i<=9;i++)
-      {
-        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-        Forward(10);
-        Turn_Right(8);
-        drive();
-        HAL_Delay(100);
-      }
-      HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-      Forward(10);
-      Turn_Left(0);
-      drive();
-      HAL_Delay(1000);
-      HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
-      return;
+  // if((cmleft < 15)&&(cmright < 15))
+  // {
+  //   //go left
+  //   printf("Too close to wall\r\n");
+  //   HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_SET);
+  //   for(uint8_t i =0; i<=9;i++)
+  //   {
+  //     HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+  //     Forward(10);
+  //     Turn_Left(8);
+  //     drive();
+  //     HAL_Delay(100);
+  //   }
+  //   HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+  //   Forward(10);
+  //   Turn_Right(0);
+  //   drive();
+  //   HAL_Delay(1000);
+  //   HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
+  //   return;
+  // }
+  // else
+  // {
+  //   if((cmleft > 30)&&(cmright > 30))
+  //   {
+  //     //go right
+  //     printf("Too far from wall\r\n");
+  //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_SET);
+  //     for(uint8_t i =0; i<=9;i++)
+  //     {
+  //       HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+  //       Forward(10);
+  //       Turn_Right(8);
+  //       drive();
+  //       HAL_Delay(100);
+  //     }
+  //     HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+  //     Forward(10);
+  //     Turn_Left(0);
+  //     drive();
+  //     HAL_Delay(1000);
+  //     HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
+  //     return;
 
-    }
-    else
-    {
-      //do nothing
-      Turn_Left(0);
-    }   
-  } 
+  //   }
+  //   else
+  //   {
+  //     //do nothing
+  //     Turn_Left(0);
+  //   }   
+  // } 
     
   
 
@@ -464,12 +466,12 @@ void superAlignment(double precision)
   
   while (1)
   {
-    while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
+    while((timel_fin==1 && timer_fin ==1)!=1)
       {
         HAL_Delay(5);
       }
       //printf("cm left = %.3f, cm right = %.3f\r\n", cml, cmr);
-      cml+=1;
+      //cml+=1;
       Inputultra = cml-cmr;
 
     if((cml-cmr<precision) && (cml-cmr)>(-1*precision))
@@ -691,13 +693,13 @@ void turn_Angle(int angle, int direction)
       tolAngle += comAngle[n];
       avgAngle = (int)(tolAngle / 3);
       n = (n + 1) % 3;
-      if (avgAngle == (angle - 2) && avgAngle <= (angle + 2))
+      if (avgAngle >= (angle - 2) && avgAngle <= (angle + 2))
         break;
 
       if (avgAngle >= (angle / 2) && avgAngle <= (angle + 3) && flag == 1)
       {
         flag = 2;
-        Forward(2);
+        Forward(5);
         xflag=1;
         drive();
         // Left(0);
@@ -705,7 +707,7 @@ void turn_Angle(int angle, int direction)
         // drive();
       }
 
-      if (avgAngle >= (angle + 10) && flag == 2)
+      if (avgAngle >= (angle + 5) && flag == 2)
       {
         // flag = 0;
         Forward(0);
@@ -781,7 +783,7 @@ void turn_Angle(int angle, int direction)
       if (avgAngle >= (angle / 2) && avgAngle <= (angle + 7) && flag == 1)
       {
         flag = 2;
-        Forward(2);
+        Forward(5);
         yflag=1;
         drive();
         // Left(0);
@@ -789,7 +791,7 @@ void turn_Angle(int angle, int direction)
         // drive();
       }
 
-      if (avgAngle >= (angle + 10) && flag == 2)
+      if (avgAngle >= (angle + 5) && flag == 2)
       {
 
         //        flag = 0;
@@ -930,10 +932,9 @@ void task (uint8_t numberoftask)
       
 
       //turn right
-        //turn on the green led
+        //turn on the red led
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-        //turn left
         turn_Angle(90,2);
 
         //finish the turning
@@ -977,12 +978,14 @@ void task (uint8_t numberoftask)
       celebrate();
       
     }
-      while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
+
+      while((timel_fin==1 && timer_fin ==1)!=1)
       {
         //waiting for the counting to finish
         toggleLD2(20);
         //printf("waiting for the counting to finish\r\n");
       }
+      timecount++;
 
       //remove strange datas
       if (cml>100)
@@ -1019,39 +1022,57 @@ void task (uint8_t numberoftask)
         rflag = 0;
       }
 
-      cml+=1;//remove fixed error
+      //cml+=1;//remove fixed error
 
-      if (cmr-cml>100)//if the difference is too large, then turn right
+      if ((cmr-cml>50)&& timecount>200)//if the difference is too large, then turn right
       {
-         turnRightCounter++;
+        timecount =0;
+        turnRightCounter++;
         //turn on the red led
+        printf("Turning right\r\n");
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
 
-        Forward(15);
-        drive();
-        HAL_Delay(500);
+        for(uint8_t i = 0 ;i<2;i++)
+        {
+          Forward(15);
+          drive();
+          toggleLD2(500);
+        }
 
-        turn_Angle(90,2);
+        Forward(0);
+        drive();
+        toggleLD2(500);
+
+        turn_Angle(60,2);
 
         //finish the turning
+        for(uint8_t i = 0 ;i<12;i++)
+        {
+          Forward(15);
+          drive();
+          toggleLD2(500);
+        }
         HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-        Forward(15);
-        drive();
-        HAL_Delay(500);
         return;
       }
 
-      if(cmf<25)//turn left
+      if((cmf<25)&& timecount>200)//turn left
       {
+        timecount=0;
         turnLeftCounter++;
+        printf("Turning left\r\n");
         //turn on the green led
         HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
+
+        Forward(0);
+        drive();
+        toggleLD2(500);
 
         //turn left
         turn_Angle(90,1);
 
         //finish the turning
-        HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
         Forward(15);
         drive();
         return;
@@ -1125,15 +1146,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("Starting\r\n");
   // Load parameters to PID
-  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra, 1, 2, 0.2, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDultra, &Inputultra, &Outputultra, &Setpointultra, 1.2, 1, 0.8, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDultra, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&myPIDultra, 50);
   PID_SetOutputLimits(&myPIDultra, -10, 10);
 
-  // PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance, 0.8, 200, 15, _PID_P_ON_E, _PID_CD_DIRECT);
-  // PID_SetMode(&myPIDdistance, _PID_MODE_AUTOMATIC);
-  // PID_SetSampleTime(&myPIDdistance, 50);
-  // PID_SetOutputLimits(&myPIDdistance, -20, 20);
+  PID(&myPIDdistance, &Inputdistance, &Outputdistance, &Setpointdistance, 0.8, 200, 15, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID_SetMode(&myPIDdistance, _PID_MODE_AUTOMATIC);
+  PID_SetSampleTime(&myPIDdistance, 50);
+  PID_SetOutputLimits(&myPIDdistance, -5, 5);
 
   PID(&myPIDopenmv, &Inputopenmv, &Outputopenmv, &Setpointopenmv, 0.2, 0, 0.2, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDopenmv, _PID_MODE_AUTOMATIC);
@@ -1157,9 +1178,9 @@ int main(void)
   Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
 
   //Recode initial Pitch
-  // ATKPrcess();
-  // initial_Pitch = pitch;
-  // initial_selfAngelint = selfAngelint;
+  ATKPrcess();
+  initial_Pitch = pitch;
+  initial_selfAngelint = selfAngelint;
 
   // UART_ENABLE_RE(huart3);
   // if (HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY) == HAL_ERROR) 
@@ -1173,7 +1194,7 @@ int main(void)
   HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY);
   UART_DISABLE_RE(huart3);
   
-
+  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
   printf("Initialized. \r\n");
   /* USER CODE END 2 */
 
@@ -1209,7 +1230,7 @@ int main(void)
     // Left(0);
     // Turn_Left(0);
     // drive();
-     toggleLD2(1000);
+    // toggleLD2(1000);
 
     // HAL_Delay(5000);
     // Set_angle(&htim2,TIM_CHANNEL_1, 150,20000,20);
@@ -1228,7 +1249,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     //just type the task number below
-    //task(2);
+    task(2);
   }
 
   /* USER CODE END 3 */
