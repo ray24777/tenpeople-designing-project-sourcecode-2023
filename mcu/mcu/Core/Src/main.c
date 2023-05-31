@@ -393,6 +393,10 @@ void gyroAlignment(double input)
   {
     Turn_Right((uint8_t)(-Outputgyro));
   }
+  if ((Outputgyro <= 0.5) && (Outputgyro >= -0.5))
+  {
+    Turn_Left(0);
+  }
 }
 /***example***/
 //in task function
