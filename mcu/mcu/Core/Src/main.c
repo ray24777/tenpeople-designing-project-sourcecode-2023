@@ -123,6 +123,7 @@ uint8_t turnRightCounter=0;
 
 uint32_t timecount=200;
 
+char buf[2]; 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -140,6 +141,45 @@ static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 // Redirect printf to UART
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+
+void afterArrowIdent(uint8_t angle)
+{
+  turn_Angle(angle,1);
+        while (1)
+        {
+          if(cmf<40)
+            break;
+
+          Forward(15);
+          walkStraight();
+          drive();
+          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_Delay(100);
+        }
+        Forward(20);
+        drive();
+        HAL_Delay(2500);
+
+        Backward(20);
+        drive();
+        HAL_Delay(2500);
+}
+
 
 // define a function to toggle the LD2 LED in a certain pattern
 void toggleLD2(uint32_t delay)
@@ -960,7 +1000,7 @@ void task (uint8_t numberoftask)
       drive();
       toggleLD2(500);
 
-      turn_Angle(80,2);
+      turn_Angle(70,2);
 
       //finish the turning
       for(uint8_t i = 0 ;i<5;i++)
@@ -1491,7 +1531,7 @@ int main(void)
   Set_angle(&htim2, TIM_CHANNEL_1, 0, 20000, 20);
   Set_angle(&htim2, TIM_CHANNEL_3, 90, 20000, 20);
   // Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
-  Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
+  Set_angle(&htim2, TIM_CHANNEL_4, 100, 20000, 20);
 
   //Recode initial Pitch
   UART_DISABLE_RE(huart1);
@@ -1506,10 +1546,9 @@ int main(void)
   //   return HAL_ERROR;
   // }
   // UART_DISABLE_RE(huart3);
-  // HAL_Delay(5000);
-  // UART_ENABLE_RE(huart3);
-  // HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY);
-  // UART_DISABLE_RE(huart3);
+  
+  HAL_Delay(5000);
+  
   
   HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
   printf("Initialized. \r\n");
@@ -1521,7 +1560,110 @@ int main(void)
   {
 
     /****************Test******************/
+    
+      ATKPrcess();
+      initial_selfAngelint= selfAngelint;
 
+      while (1)
+      {
+        if(cmf<40)
+          break;
+
+        Forward(15);
+        walkStraight();
+        drive();
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        HAL_Delay(50);
+
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        HAL_Delay(50);
+
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        HAL_Delay(50);
+
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        HAL_Delay(50);
+
+        HAL_Delay(100);
+      }
+      Forward(0);
+      drive();
+      UART_ENABLE_RE(huart3);
+      HAL_UART_Transmit(&huart3, "task2", 5, HAL_MAX_DELAY);
+      UART_DISABLE_RE(huart3);
+      HAL_Delay(500);
+      while (1)
+      {
+        UART_ENABLE_RE(huart3);
+        if (HAL_UART_Receive(&huart3, (uint8_t *)buf, 2, HAL_MAX_DELAY)==HAL_OK)
+        {
+          if (buf [0]='b')
+            break;
+        }
+      }
+      // 1 right; 2 front; 3 left
+      switch (buf[1])
+      {
+      case '1':
+        afterArrowIdent(45);
+        
+        turn_Angle(45,1);
+
+        Forward(20);
+        drive();
+        HAL_Delay(4500);
+        Forward(0);
+        drive();
+        HAL_Delay(500);
+        superAlignment(1);
+
+        break;
+      
+      case '2':
+        afterArrowIdent(90);
+
+        
+
+        break;
+      case '3':
+        turn_Angle(135,1);
+        while (1)
+        {
+          if(cmf<19)
+            break;
+
+          Forward(15);
+          walkStraight();
+          drive();
+          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_Delay(100);
+        }
+
+        celebrate();
+
+        break;
+      default:
+        break;
+      }
 
     //toggleLD2(1000);
     // turn_Angle(90,2);
@@ -1532,7 +1674,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     //just type the task number below
-    task(1);
+    //task(1);
   }
 
   /* USER CODE END 3 */
