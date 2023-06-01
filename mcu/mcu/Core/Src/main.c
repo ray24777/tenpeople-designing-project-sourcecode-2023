@@ -385,16 +385,16 @@ void gyroAlignment(double input)
       printf("PID_Compute for gyro error\r\n");
     printf("Outputgyro = %.3f\r\n", Outputgyro);
 
-  if (Outputgyro > 0.5)
+  if (Outputgyro > 1)
   {
 
     Turn_Left((uint8_t)Outputgyro);
   }
-  if (Outputgyro < -0.5)
+  if (Outputgyro < -1)
   {
     Turn_Right((uint8_t)(-Outputgyro));
   }
-  if ((Outputgyro <= 0.5) && (Outputgyro >= -0.5))
+  if ((Inputgyro <= 1) && (Inputgyro >= -1))
   {
     Turn_Left(0);
   }
@@ -502,21 +502,37 @@ void superAlignment(double precision)
   {
     while((timel_fin==1 && timer_fin ==1)!=1)
       {
-        HAL_Delay(5);
+        HAL_Delay(1);
       }
       //printf("cm left = %.3f, cm right = %.3f\r\n", cml, cmr);
       //cml+=1;
-      Inputultra = cml-cmr;
+      
 
     if((cml-cmr<precision) && (cml-cmr)>(-1*precision))
     {
+      //double check
+      Forward(0);
+      drive();
+      HAL_Delay(500);
+
       printf("Super Alignment Finished.\r\n");
       Forward(0);
       drive();
-      return;
+      if((cml-cmr<precision) && (cml-cmr)>(-1*precision))
+      {
+        HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
+        toggleLD2(500);
+        return;
+      }
+      else
+      {
+        continue;
+      }
     }
     else
     {
+      Inputultra = cml-cmr;
       if (PID_Compute(&myPIDultra)==_FALSE)
         printf("PID_Compute for ultra error\r\n");
       printf("Outputultra = %.3f\r\n", Outputultra);
@@ -524,18 +540,18 @@ void superAlignment(double precision)
       if (Outputultra > 0)
       {
         Forward((uint8_t)(Outputultra));
-        xflag=1;
+        xspeed=0;
       }
       else
       {
         Forward((int)(-1*Outputultra));
-        yflag=1;
+        yspeed=0;
       }
       drive();
 
       HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
       HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-      HAL_Delay(500);
+      HAL_Delay(300);
     }
   }
 }
@@ -679,19 +695,17 @@ char GetOpemMvArrow() // Return Turn Angle
     return '3';
 }
 
-char walkStraight() // Return Turn Angle
+void walkStraight() // Return Turn Angle
 {
+  ATKPrcess();
   int relativeAngle = 0;
 
-  if(atkAngleRound(selfAngelint - initial_selfAngelint) > 90)
-    relativeAngle = atkAngleRound(initial_selfAngelint - selfAngelint);
+  if(atkAngleRound(selfAngelint - initial_selfAngelint) > 180)
+    relativeAngle = -1 * atkAngleRound(initial_selfAngelint - selfAngelint);
   else
-    relativeAngle = atkAngleRound(selfAngelint - initial_selfAngelint);
+    relativeAngle =  atkAngleRound((selfAngelint - initial_selfAngelint));
 
-  Forward(10);
   gyroAlignment(relativeAngle);
-  drive();
-  toggleld2(50);
 }
 
 void turn_Angle(int angle, int direction)
@@ -1203,10 +1217,10 @@ int main(void)
   PID_SetSampleTime(&myPIDopenmv, 170);
   PID_SetOutputLimits(&myPIDopenmv, -10, 10);
 
-  PID(&myPIDgyro, &Inputgyro, &Outputgyro, &Setpointgyro, 1.2, 1, 0.8, _PID_P_ON_E, _PID_CD_DIRECT);
+  PID(&myPIDgyro, &Inputgyro, &Outputgyro, &Setpointgyro, 0.5, 0.1, 1.2, _PID_P_ON_E, _PID_CD_DIRECT);
   PID_SetMode(&myPIDgyro, _PID_MODE_AUTOMATIC);
-  PID_SetSampleTime(&myPIDgyro, 100);
-  PID_SetOutputLimits(&myPIDgyro, -5, 5);
+  PID_SetSampleTime(&myPIDgyro, 50);
+  PID_SetOutputLimits(&myPIDgyro, -4, 4);
 
   // start TIM1 PWM generator
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -1225,9 +1239,9 @@ int main(void)
   Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
 
   //Recode initial Pitch
-  // ATKPrcess();
-  // initial_Pitch = pitch;
-  // initial_selfAngelint = selfAngelint;
+   ATKPrcess();
+   initial_Pitch = pitch;
+   initial_selfAngelint = selfAngelint;
 
   // UART_ENABLE_RE(huart3);
   // if (HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY) == HAL_ERROR) 
@@ -1236,7 +1250,7 @@ int main(void)
   //   return HAL_ERROR;
   // }
   // UART_DISABLE_RE(huart3);
-  //HAL_Delay(5000);
+  HAL_Delay(2000);
   //UART_ENABLE_RE(huart3);
   //HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY);
   //UART_DISABLE_RE(huart3);
@@ -1251,43 +1265,38 @@ int main(void)
   {
 
     /****************Test******************/
-    // Set_angle(&htim2,TIM_CHANNEL_4, 65,20000,20);
-    //turn_Angle(45, 2);
-    //turn_Angle(90, 2);
+
+    superAlignment(0.5);
+    //get initial value
+    
+    ATKPrcess();
+    initial_selfAngelint= selfAngelint;
+
+    while (1)
+    {
+      Forward(15);
+      //walkStraight();
+      yspeed++;
+      drive();
+      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+      HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+      HAL_Delay(50);
+
+      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+      HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+      HAL_Delay(50);
+
+      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+      HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+      HAL_Delay(50);
+
+      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+      HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+      HAL_Delay(50);
+
+      HAL_Delay(300);
+    }
     //toggleLD2(1000);
-    //turn_Angle(90, 1);
-    //Forward(10);
-    //drive();
-    //toggleLD2(1000);
-    // Backward(10);
-    // drive();
-    //toggleLD2(1000);
-    //HAL_Delay(3000);
-    // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-    // Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
-    // Set_angle(&htim1,TIM_CHANNEL_4, 110,20000,20);
-    // Forward(10);
-    //    Left(0);
-    // Turn_Left(10);
-    // drive();
-    // toggleLD2(500);
-
-    // superAlignment(0.5);
-    // Forward(10);
-    // Left(0);
-    // Turn_Left(0);
-    // drive();
-    // toggleLD2(1000);
-
-    // HAL_Delay(5000);
-    // Set_angle(&htim2,TIM_CHANNEL_1, 150,20000,20);
-    // toggleLD2(100);
-
-    // turn_Angle(60, 1);
-
-
-    // HAL_Delay(5000);
-    //  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
     // HAL_Delay(10000);
     /****************Test******************/
@@ -1296,7 +1305,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     //just type the task number below
-    task(1);
+    //task(1);
   }
 
   /* USER CODE END 3 */
