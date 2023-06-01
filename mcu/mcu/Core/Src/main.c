@@ -580,6 +580,7 @@ void ATKPrcess() // update ATK value
   if (HAL_UART_Receive(&huart1, (uint8_t *)ATKbuf, 60, HAL_MAX_DELAY) == HAL_ERROR) // Read frames from ATK
   {
     UART_DISABLE_RE(huart1); // error
+    ATKPrcess();
     return;
   }
   UART_DISABLE_RE(huart1);
@@ -607,6 +608,7 @@ void ATKPrcess() // update ATK value
 
   if (r == 60) // Do not find the correct reply
   {
+    ATKPrcess();
     return;
   }
 
@@ -638,6 +640,7 @@ void Set_angle(TIM_HandleTypeDef *htim, uint32_t Channel, uint8_t angle, uint32_
 
 int GetOpemMv() // Return Turn Angle
 {
+  printf("IN GetOpenmv\r\n");
   uint8_t r = 0;
   char Mvbuf[10];
   char *frame;
@@ -894,9 +897,9 @@ void turn_Angle(int angle, int direction)
     // }
   }
 
-  // Forward(0);
-  Left(0);
-  Turn_Left(0);
+  Forward(0);
+  // Left(0);
+  // Turn_Left(0);
   drive();
   toggleLD2(100);
   return;
@@ -929,13 +932,17 @@ void task (uint8_t numberoftask)
       toggleLD2(10);
     }
 
-    if (cml<20 &&cmr<20)
+    if (cml<20 && cmr<20)
     {//alignment 
       printf("Found the bridge\r\n");
       Forward(0);
       drive();
       HAL_Delay(1000);
       superAlignment(1);
+      
+      Forward(0);
+      drive();
+      HAL_Delay(1000);
 
       //turn right
       Forward(10);
@@ -953,10 +960,10 @@ void task (uint8_t numberoftask)
       drive();
       toggleLD2(500);
 
-      turn_Angle(90,2);
+      turn_Angle(80,2);
 
       //finish the turning
-      for(uint8_t i = 0 ;i<4;i++)
+      for(uint8_t i = 0 ;i<5;i++)
       {
         Forward(15);
         drive();
@@ -970,6 +977,10 @@ void task (uint8_t numberoftask)
       HAL_Delay(1000);
       superAlignment(1);
 
+      Forward(0);
+      drive();
+      HAL_Delay(1000);
+
       //get initial value
       
       ATKPrcess();
@@ -977,7 +988,7 @@ void task (uint8_t numberoftask)
 
       while (1)
       {
-        if(cmf<15)
+        if(cmf<19)
           break;
 
         Forward(15);
@@ -1006,7 +1017,7 @@ void task (uint8_t numberoftask)
       drive();
       HAL_Delay(1000);
 
-      turn_Angle(70,1);
+      turn_Angle(80,1);
 
       Forward(0);
       drive();
@@ -1014,71 +1025,77 @@ void task (uint8_t numberoftask)
       
       //trace the white line
       superAlignment(1);
-      UART_ENABLE_RE(huart3);
-      HAL_UART_Transmit(&huart3, "task3", 5, HAL_MAX_DELAY);
-      UART_DISABLE_RE(huart3);
+      
+      Forward(0);
+      drive();
+      HAL_Delay(1000);
+
+      // UART_ENABLE_RE(huart3);
+      // HAL_UART_Transmit(&huart3, "task3", 5, HAL_MAX_DELAY);
+      // UART_DISABLE_RE(huart3);
       uint32_t time=0;
+      ATKPrcess();
+      initial_selfAngelint= selfAngelint;
       while (1)
       {
-        if((cml<20||cmr<20)&& time >30)
-          break;
-
-        time++;
-
-        openmvAngle = GetOpemMv();
-        // openmvAngle=100;
-
-        Inputopenmv = openmvAngle;
-        if (openmvAngle != HAL_ERROR)
-        {
-          printf("openmvangle=%d\r\n", openmvAngle);
-
-          if (PID_Compute(&myPIDopenmv)==_FALSE)
-            printf("PID_Compute for OpenMV error\r\n");
-
-          printf("Outputopenmv = %.3f\r\n", Outputopenmv);
-
-          if(Outputopenmv > 0)
-          {
-            Forward(15);
-            Turn_Left((int)Outputopenmv);
-            drive();
-          }
-          else
-          {
-            Forward(15);
-            Turn_Right((int)((-1) * Outputopenmv));
-            drive();
-          }
-          toggleLD2(250);
-        }
-        
-        
         // if((cml<20||cmr<20)&& time >30)
         //   break;
 
-        
-        // Forward(15);
-        // walkStraight();
-        // drive();
-        // HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-        // HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-        // HAL_Delay(50);
-
-        // HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-        // HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-        // HAL_Delay(50);
-
-        // HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-        // HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-        // HAL_Delay(50);
-
-        // HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-        // HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-        // HAL_Delay(50);
-
-        // HAL_Delay(100);
         // time++;
+
+        // openmvAngle = GetOpemMv();
+        // // openmvAngle=100;
+
+        // Inputopenmv = openmvAngle;
+        // if (openmvAngle != HAL_ERROR)
+        // {
+        //   printf("openmvangle=%d\r\n", openmvAngle);
+
+        //   if (PID_Compute(&myPIDopenmv)==_FALSE)
+        //     printf("PID_Compute for OpenMV error\r\n");
+
+        //   printf("Outputopenmv = %.3f\r\n", Outputopenmv);
+
+        //   if(Outputopenmv > 0)
+        //   {
+        //     Forward(15);
+        //     Turn_Left((int)Outputopenmv);
+        //     drive();
+        //   }
+        //   else
+        //   {
+        //     Forward(15);
+        //     Turn_Right((int)((-1) * Outputopenmv));
+        //     drive();
+        //   }
+        //   toggleLD2(250);
+        // }
+        
+        
+        if((cml<20||cmr<20)&& time >30)
+          break;
+
+        
+        Forward(15);
+        walkStraight();
+        drive();
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        HAL_Delay(50);
+
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        HAL_Delay(50);
+
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        HAL_Delay(50);
+
+        HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+        HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+        HAL_Delay(50);
+
+        time++;
       }
       Forward(0);
       drive();
@@ -1477,9 +1494,10 @@ int main(void)
   Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
 
   //Recode initial Pitch
-   ATKPrcess();
-   initial_Pitch = pitch;
-   initial_selfAngelint = selfAngelint;
+  UART_DISABLE_RE(huart1);
+  // ATKPrcess();
+  // initial_Pitch = pitch;
+  // initial_selfAngelint = selfAngelint;
 
   // UART_ENABLE_RE(huart3);
   // if (HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY) == HAL_ERROR) 
@@ -1488,7 +1506,7 @@ int main(void)
   //   return HAL_ERROR;
   // }
   // UART_DISABLE_RE(huart3);
-  HAL_Delay(5000);
+  // HAL_Delay(5000);
   // UART_ENABLE_RE(huart3);
   // HAL_UART_Transmit(&huart3, "task1", 5, HAL_MAX_DELAY);
   // UART_DISABLE_RE(huart3);
@@ -1506,7 +1524,7 @@ int main(void)
 
 
     //toggleLD2(1000);
-
+    // turn_Angle(90,2);
     // HAL_Delay(10000);
     /****************Test******************/
     /* USER CODE END WHILE */
@@ -1514,7 +1532,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     //just type the task number below
-    task(2);
+    task(1);
   }
 
   /* USER CODE END 3 */
