@@ -23,10 +23,10 @@ main.c:675:6:Set_angle	7
 main.c:685:5:GetOpemMv	7
 main.c:724:6:GetOpemMvArrow	8
 main.c:745:6:walkStraight	2
-main.c:758:6:turn_Angle	17
-main.c:951:6:celebrate	1
-main.c:965:6:task	47
-main.c:1468:5:main	9
+main.c:758:6:turn_Angle	21
+main.c:950:6:celebrate	1
+main.c:964:6:task	47
+main.c:1467:5:main	9
 main.c:1732:6:SystemClock_Config	3
 main.c:1779:13:MX_LPUART1_UART_Init	5
 main.c:1826:13:MX_UART4_Init	5
