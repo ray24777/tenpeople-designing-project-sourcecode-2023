@@ -167,12 +167,9 @@ void afterArrowIdent(uint8_t angle)
   drive();
   HAL_Delay(2500);
 
-  if(angle!=40)
-  {
-    Backward(20);
-    drive();
-    HAL_Delay(2500);
-  }
+  Backward(20);
+  drive();
+  HAL_Delay(2500);
 }
 //toggle rg led
 void togglewalk()
@@ -593,12 +590,12 @@ void superAlignment(double precision)
   
       if (Outputultra > 0)
       {
-        Forward((uint8_t)(Outputultra));
+        Forward((uint8_t)(5));
         xflag=1;
       }
       else
       {
-        Forward((int)(-1*Outputultra));
+        Forward((int)(5));
         yflag=1;
       }
       drive();
@@ -606,6 +603,65 @@ void superAlignment(double precision)
       HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
       HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
       HAL_Delay(300);
+    }
+  }
+}
+
+void superAlignmentNew(double precision)
+{
+  printf("Super Alignment Started.\r\n");
+  
+  while (1)
+  {
+    while((timel_fin==1 && timer_fin ==1)!=1)
+      {
+        HAL_Delay(1);
+      }
+      //printf("cm left = %.3f, cm right = %.3f\r\n", cml, cmr);
+      //cml+=1;
+      
+
+    if((cml-cmr<precision) && (cml-cmr)>(-1*precision))
+    {
+      //double check
+      Forward(0);
+      drive();
+      HAL_Delay(500);
+
+      printf("Super Alignment Finished.\r\n");
+      Forward(0);
+      drive();
+      if((cml-cmr<precision) && (cml-cmr)>(-1*precision))
+      {
+        HAL_GPIO_WritePin(ldr_GPIO_Port,ldr_Pin,GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(ldg_GPIO_Port,ldg_Pin,GPIO_PIN_RESET);
+        toggleLD2(500);
+        return;
+      }
+      else
+      {
+        continue;
+      }
+    }
+    else
+    {
+      Inputultra = cml-cmr;
+  
+      if (Inputultra > 0)
+      {
+        Forward(5);
+        yflag=1;
+      }
+      else
+      {
+        Forward(5);
+        xflag=1;
+      }
+      drive();
+
+      HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
+      HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+      HAL_Delay(50);
     }
   }
 }
@@ -1190,89 +1246,35 @@ void task (uint8_t numberoftask)
       Forward(0);
       drive();
       HAL_Delay(1000);
-      // UART_ENABLE_RE(huart3);
-      // HAL_UART_Transmit(&huart3, "task2", 5, HAL_MAX_DELAY);
-      // UART_DISABLE_RE(huart3);
-      // HAL_Delay(500);
-      buf[1] = '1';
-      // while (1)
-      // {
-      //   buf[1] = GetOpemMvArrow();
-      //   if (buf[1] == '1' || buf[1] == '2')
-      //     break;
-      //   if(buf[1] == '3')
-      //     break;
-      // }
+      HAL_UART_Transmit(&huart3, "task2", 5, HAL_MAX_DELAY);
+      HAL_Delay(500);
+      // buf[1] = '1';
+      while (1)
+      {
+        buf[1] = GetOpemMvArrow();
+        if (buf[1] == '1' || buf[1] == '2')
+          break;
+        if(buf[1] == '3')
+          break;
+      }
       //buf[1]='2';
       // 1 right; 2 front; 3 left
       switch (buf[1])
       {
       case '1':
         afterArrowIdent(40);
-
-        Forward(15);
-        drive();
-        HAL_Delay(1000);
-        
-        turn_Angle(20,1);
-
-        //Forward(20);
-        //drive();
-        //HAL_Delay(4500);
-        Forward(0);
-        drive();
-        HAL_Delay(500);
-        superAlignment(1);
-        patio2counter++;
+        turn_Angle(40, 1);
         break;
       
       case '2':
-        afterArrowIdent(90);
-
-        turn_Angle(80,2);
-
-        ATKPrcess();
-        initial_selfAngelint = selfAngelint;
-
-        while (1)
-        {
-          if (cmf < 40)
-            break;
-
-          Forward(15);
-          walkStraight();
-          drive();
-          togglewalk();
-        }
-
-        turn_Angle(90, 1);
-        superAlignment(1);
-        celebrate();
-
+        afterArrowIdent(80);
         break;
+
       case '3':
         afterArrowIdent(135);
-
-        turn_Angle(125, 2);
-        ATKPrcess();
-        initial_selfAngelint = selfAngelint;
-
-        while (1)
-        {
-          if (cmf < 50)
-            break;
-
-          Forward(15);
-          walkStraight();
-          drive();
-          togglewalk();
-        }
-
-        turn_Angle(90, 1);
-        superAlignment(1);
-        celebrate();
-
+        turn_Angle(40, 2);
         break;
+
       default:
         break;
       }
@@ -1282,265 +1284,208 @@ void task (uint8_t numberoftask)
     // HAL_Delay(10000);
     }
 
-    if (turnLeftCounter==2 && turnRightCounter==2)
+    ATKPrcess();
+    initial_selfAngelint = selfAngelint;
+
+    while(1)
     {
-      printf("Going to the busket.\r\n");
-
-      superAlignment(1);
-
-      ATKPrcess();
-      initial_selfAngelint = selfAngelint;
-
-      while (1)
-      {
-        if (cmf < 15)
-          break;
-
-        Forward(15);
-        walkStraight();
-        drive();
-        togglewalk();
-
-      }
-
-      //stop 
-      Forward(0);
+      if(cmf <= 25)
+        break;
+      Forward(15);
+      walkStraight();
       drive();
-      toggleLD2(500);
-      //throw the ball
-      Set_angle(&htim2,TIM_CHANNEL_1, 160,20000,20);
-      toggleLD2(1000);
-      Set_angle(&htim2,TIM_CHANNEL_1, 0,20000,20);
-
-      superAlignment(1.5);
-      turn_Angle(70,1);
-      //go back
-      for (int i = 0; i < 4; i++)
-      {
-        Backward(15);
-        drive();
-        toggleLD2(500);
-      }
-      superAlignment(1);
-      
-
-      //turn right
-      //turn on the red led
-      HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
-
-      turn_Angle(90,2);
-
-      //finish the turning
-      HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-
-      Backward(15);
-      drive();
-
-      while (1)//detect the planter
-      {
-        while(((timel_fin==1 && timer_fin ==1)&& timef_fin==1)!=1)
-        {
-          //waiting for the counting to finish
-          toggleLD2(20);
-        }
-        if(cml<80||cmr<80)
-        {
-          Forward(0);
-          drive();
-          toggleLD2(500);
-          break;
-        }
-        Backward(15);
-        drive();
-        toggleLD2(500);
-      }
-      hc12send('a');
-      toggleLD2(500);
-
-      //FINISH THE TASK
-
-      for (uint8_t i = 0; i < 6; i++)
-      {
-        Backward(15);
-        drive();
-        toggleLD2(500);
-      }
-      
-      Backward(0);
-      drive();
-      celebrate();
-      
+      togglewalk();
     }
 
+    Forward(0);
+    drive();
+
+    HAL_Delay(500);
+
+    turn_Angle(80,1);
+
+    Forward(5);
+    xflag = 1;
+    drive();
+
+    while (1)
+    {
       while((timel_fin==1 && timer_fin ==1)!=1)
       {
         //waiting for the counting to finish
         toggleLD2(20);
         //printf("waiting for the counting to finish\r\n");
       }
-      timecount++;
+      if(cml <= 30 && cmr <= 30)
+        break;
+    }
+    
+    Forward(0);
+    drive();
 
-      //remove strange datas
-      if (cml>100)
-      {       
-        if(ultraerrorcount_l<2  && lflag != 1)
-        {
-          ultraerrorcount_l++;
-          return;//skip if there is error data
-        }
-        else
-        {
-          ultraerrorcount_l=0;
-          lflag = 1;
-        }
-      }
-      else{
-        lflag = 0;
-      }
+    HAL_Delay(500);
 
-      if (cmr>100)
-      {       
-        if(ultraerrorcount_r<2  && rflag != 1)
-        {
-          ultraerrorcount_r++;
-          return;//skip if there is error data
-        }
-        else
-        {
-          ultraerrorcount_r=0;
-          rflag = 1;
-        }
-      }
-      else{
-        rflag = 0;
-      }
+    superAlignment(1.5);
 
-      //cml+=1;//remove fixed error
+    turn_Angle(160,1);
 
-      if ((cmr-cml>50)&& timecount>200)//if the difference is too large, then turn right
+    // 2 round
+    ATKPrcess();
+    initial_selfAngelint = selfAngelint;
+
+    while(1)
+    {
+      if(cmf <= 25)
+        break;
+      Forward(15);
+      walkStraight();
+      drive();
+      togglewalk();
+    }
+
+    Forward(0);
+    drive();
+
+    HAL_Delay(500);
+
+    turn_Angle(90,1);
+
+    Forward(5);
+    yflag = 1;
+    drive();
+
+    while (1)
+    {
+      while((timel_fin==1 && timer_fin ==1)!=1)
       {
-        if (turnRightCounter == 0)//first edge
-        {
-          timecount =0;
-          turnRightCounter++;
-          //turn on the red led
-          printf("Turning right\r\n");
-          HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
-
-          for(uint8_t i = 0 ;i<2;i++)
-          {
-            Forward(15);
-            drive();
-            toggleLD2(500);
-          }
-
-          Forward(0);
-          drive();
-          toggleLD2(500);
-
-          turn_Angle(70,2);
-
-          HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-
-          ATKPrcess();
-          initial_selfAngelint= selfAngelint;
-
-          while (1)
-          {
-            if(cmf<30)
-              break;
-
-            Forward(15);
-            walkStraight();
-            drive();
-            togglewalk();
-
-          }
-          //turn left
-          timecount=0;
-          turnLeftCounter++;
-          printf("Turning left\r\n");
-          //turn on the green led
-          HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
-
-          Forward(0);
-          drive();
-          toggleLD2(500);
-
-          //turn left
-          turn_Angle(90,1);
-
-          superAlignment(1.5);
-
-          //finish the turning
-          HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
-          Forward(15);
-          drive();
-          return;
- 
-        }
-        else
-        {
-          timecount =0;
-          turnRightCounter++;
-          //turn on the red led
-          printf("Turning right\r\n");
-          HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_SET);
-
-          for(uint8_t i = 0 ;i<2;i++)
-          {
-            Forward(15);
-            drive();
-            toggleLD2(500);
-          }
-
-          Forward(0);
-          drive();
-          toggleLD2(500);
-
-          turn_Angle(60,2);
-
-          //finish the turning
-          for(uint8_t i = 0 ;i<12;i++)
-          {
-            Forward(15);
-            drive();
-            toggleLD2(500);
-          }
-          HAL_GPIO_WritePin(ldr_GPIO_Port, ldr_Pin,GPIO_PIN_RESET);
-          return;
-        }
+        //waiting for the counting to finish
+        toggleLD2(20);
+        //printf("waiting for the counting to finish\r\n");
       }
+      if(cml <= 30 && cmr <= 30)
+        break;
+    }
+    
+    Forward(0);
+    drive();
 
-      if((cmf<25)&& timecount>200)//turn left
+    HAL_Delay(500);
+
+    superAlignment(1.5);
+
+    //3 round
+    ATKPrcess();
+    initial_selfAngelint = selfAngelint;
+
+    while(1)
+    {
+      if(cml >= 100 && cmr >= 100)
+        break;
+      Forward(15);
+      walkStraight();
+      drive();
+      togglewalk();
+    }
+
+    Forward(15);
+    drive();
+    
+    HAL_Delay(3500);
+
+    turn_Angle(78,2);
+    
+    Forward(0);
+    drive();
+
+    HAL_Delay(500);
+
+    ATKPrcess();
+    initial_selfAngelint = selfAngelint;
+    
+    while(1)
+    {
+      if(cmf <= 30)
+        break;
+      Forward(15);
+      walkStraight();
+      drive();
+      togglewalk();
+    }
+
+    HAL_Delay(1000);
+
+    Forward(5);
+    xflag = 1;
+    drive();
+
+    turn_Angle(80,1);
+
+    while (1)
+    {
+      while((timel_fin==1 && timer_fin ==1)!=1)
       {
-        timecount=0;
-        turnLeftCounter++;
-        printf("Turning left\r\n");
-        //turn on the green led
-        HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_SET);
-
-        Forward(0);
-        drive();
-        toggleLD2(500);
-
-        //turn left
-        turn_Angle(90,1);
-
-        //finish the turning
-        HAL_GPIO_WritePin(ldg_GPIO_Port, ldg_Pin,GPIO_PIN_RESET);
-        Forward(15);
-        drive();
-        return;
+        //waiting for the counting to finish
+        toggleLD2(20);
+        //printf("waiting for the counting to finish\r\n");
       }
-      else//nothing in front
-      {
-        Forward(15);
-        Alignment(cml, cmr);
-        drive();
-        toggleLD2(25);
-        return;      
-      }
+      if(cml <= 30 && cmr <= 30)
+        break;
+    }
+
+    superAlignment(1.5);
+
+    ATKPrcess();
+    initial_selfAngelint = selfAngelint;
+
+    while(1)
+    {
+      if(cmf <= 20)
+        break;
+      Forward(15);
+      walkStraight();
+      drive();
+      togglewalk();
+    }
+
+    Forward(0);
+    drive();
+
+    HAL_Delay(1000);
+
+    Set_angle(&htim2, TIM_CHANNEL_1, 150, 20000, 20);
+    
+    HAL_Delay(5000);
+    
+    Set_angle(&htim2, TIM_CHANNEL_1, 0, 20000, 20);
+    
+    HAL_Delay(5000);
+
+    turn_Angle(75, 1);
+
+    ATKPrcess();
+    initial_selfAngelint = selfAngelint;
+    
+    // while(1)
+    // {
+    //   if(cmf <= 20)
+    //     break;
+    //   Forward(15);
+    //   walkStraight();
+    //   drive();
+    //   togglewalk();
+    // }
+
+    for(int mytmp = 0; mytmp < 1000; mytmp++)
+    {
+      Forward(15);
+      walkStraight();
+      drive();
+      HAL_Delay(100);
+    }
+    Forward(0);
+    drive();
+
+    celebrate();
 
     /****************TASK 2******************/
     break;
@@ -1672,6 +1617,9 @@ int main(void)
 
     //just type the task number below
     task(2);
+    
+    //printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cml, cmr);
+    //HAL_Delay(500);
   }
 
   /* USER CODE END 3 */
