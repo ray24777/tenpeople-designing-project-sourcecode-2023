@@ -144,42 +144,46 @@ static void MX_TIM2_Init(void);
 
 void afterArrowIdent(uint8_t angle)
 {
-  turn_Angle(angle,1);
-        while (1)
-        {
-          if(cmf<40)
-            break;
+  turn_Angle(angle, 1);
+  // get initial value
 
-          Forward(15);
-          walkStraight();
-          drive();
-          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-          HAL_Delay(50);
+  ATKPrcess();
+  initial_selfAngelint = selfAngelint;
 
-          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-          HAL_Delay(50);
+  while (1)
+  {
+    if (cmf < 40)
+      break;
 
-          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-          HAL_Delay(50);
+    Forward(15);
+    walkStraight();
+    drive();
+    HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+    HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
+    HAL_Delay(50);
 
-          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
-          HAL_Delay(50);
+    HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+    HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
+    HAL_Delay(50);
 
-          HAL_Delay(100);
-        }
-        Forward(20);
-        drive();
-        HAL_Delay(2500);
+    HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+    HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
+    HAL_Delay(50);
 
-        Backward(20);
-        drive();
-        HAL_Delay(2500);
+    HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+    HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
+    HAL_Delay(50);
+
+    HAL_Delay(100);
+  }
+  Forward(20);
+  drive();
+  HAL_Delay(2500);
+
+  Backward(20);
+  drive();
+  HAL_Delay(2500);
 }
-
 
 // define a function to toggle the LD2 LED in a certain pattern
 void toggleLD2(uint32_t delay)
@@ -1529,7 +1533,7 @@ int main(void)
 
   // Servo initial position
   Set_angle(&htim2, TIM_CHANNEL_1, 0, 20000, 20);
-  Set_angle(&htim2, TIM_CHANNEL_3, 90, 20000, 20);
+  Set_angle(&htim2, TIM_CHANNEL_3, 90, 20000, 20);//90 for task 2
   // Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
   Set_angle(&htim2, TIM_CHANNEL_4, 100, 20000, 20);
 
@@ -1620,44 +1624,85 @@ int main(void)
         drive();
         HAL_Delay(500);
         superAlignment(1);
-
+        celebrate();
         break;
       
       case '2':
         afterArrowIdent(90);
 
-        
+        turn_Angle(90,2);
 
-        break;
-      case '3':
-        turn_Angle(135,1);
+        ATKPrcess();
+        initial_selfAngelint = selfAngelint;
+
         while (1)
         {
-          if(cmf<19)
+          if (cmf < 40)
             break;
 
           Forward(15);
           walkStraight();
           drive();
-          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
           HAL_Delay(50);
 
-          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
           HAL_Delay(50);
 
-          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
           HAL_Delay(50);
 
-          HAL_GPIO_TogglePin(ldr_GPIO_Port,ldr_Pin);
-          HAL_GPIO_TogglePin(ldg_GPIO_Port,ldg_Pin);
+          HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
           HAL_Delay(50);
 
           HAL_Delay(100);
         }
 
+        turn_Angle(90, 1);
+        superAlignment(1);
+        celebrate();
+
+        break;
+      case '3':
+        afterArrowIdent(135);
+
+        turn_Angle(135, 2);
+        ATKPrcess();
+        initial_selfAngelint = selfAngelint;
+
+        while (1)
+        {
+          if (cmf < 50)
+            break;
+
+          Forward(15);
+          walkStraight();
+          drive();
+          HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_GPIO_TogglePin(ldr_GPIO_Port, ldr_Pin);
+          HAL_GPIO_TogglePin(ldg_GPIO_Port, ldg_Pin);
+          HAL_Delay(50);
+
+          HAL_Delay(100);
+        }
+
+        turn_Angle(90, 1);
+        superAlignment(1);
         celebrate();
 
         break;
