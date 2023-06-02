@@ -774,12 +774,11 @@ void turn_Angle(int angle, int direction)
 
   if (direction == 1)
   {
-    Forward(0);
     // Left(0);
     // Turn_Left(300); //增大目前角度
     // drive();
 
-    Forward(7);
+    Forward(5);
     xflag=1;
     drive();
 
@@ -807,7 +806,7 @@ void turn_Angle(int angle, int direction)
       comAngle[n] = atkAngleRound(selfAngelint - iniAngle);
       tolAngle += comAngle[n];
       avgAngle = (int)(tolAngle / 3);
-      avgAngle = comAngle[n];
+      // avgAngle = comAngle[n];
       n = (n + 1) % 3;
       if (avgAngle >= (angle - 2) && avgAngle <= (angle + 2))
         break;
@@ -815,7 +814,7 @@ void turn_Angle(int angle, int direction)
       if (avgAngle >= (angle / 2) && avgAngle <= (angle + 3) && flag == 1)
       {
         flag = 2;
-        Forward(7);
+        Forward(5);
         xflag=1;
         drive();
         // Left(0);
@@ -849,30 +848,26 @@ void turn_Angle(int angle, int direction)
     // Turn_Right(150); //减小目前角度
     // drive();
 
-    Forward(0);
-    drive();
-    HAL_Delay(500);
+    // // Forward(0);
+    // drive();
+    // HAL_Delay(500);
 
-    Forward(4);
-    yflag=1;
-    drive();
-    while (1)
-    {
-      // toggleLD2(5);
-      if (atkAngleRound(selfAngelint - iniAngle) >= (angle-3) && atkAngleRound(selfAngelint - iniAngle) <= (angle+3))
-        break;
-      ATKPrcess();
+    // Forward(4);
+    // yflag=1;
+    // drive();
+    // while (1)
+    // {
+    //   // toggleLD2(5);
+      // if (atkAngleRound(selfAngelint - iniAngle) >= (angle-3) && atkAngleRound(selfAngelint - iniAngle) <= (angle+3))
+        // break;
+      // ATKPrcess();
 
       // SendPCint(aimAngle);
-    }
+    // }
   }
   else if (direction == 2)
   {
-    Forward(0);
-    // Left(0);
-    // Turn_Right(300);//减小目前角度
-    // drive();
-    Forward(7);
+    Forward(5);
     yflag=1;
     drive();
 
@@ -899,15 +894,15 @@ void turn_Angle(int angle, int direction)
       tolAngle -= comAngle[n];
       comAngle[n] = atkAngleRound(iniAngle - selfAngelint);
       tolAngle += comAngle[n];
-      // avgAngle = (int)(tolAngle / 3);
-      avgAngle = comAngle[n];
+      avgAngle = (int)(tolAngle / 3);
+      // avgAngle = comAngle[n];
       n = (n + 1) % 3;
       if (avgAngle >= (angle - 3) && avgAngle <= (angle + 7))
         break;
       if (avgAngle >= (angle / 2) && avgAngle <= (angle + 7) && flag == 1)
       {
         flag = 2;
-        Forward(7);
+        Forward(5);
         yflag=1;
         drive();
         // Left(0);
@@ -934,15 +929,15 @@ void turn_Angle(int angle, int direction)
     
     HAL_Delay(500);
     
-    Forward(4);
-    xflag=1;
-    drive();
-    while (1)
-    {
-      if (atkAngleRound(iniAngle - selfAngelint) >= (angle-2) && atkAngleRound(iniAngle - selfAngelint) <= (angle+2))
-        break;
-      ATKPrcess();
-    }
+    // Forward(4);
+    // xflag=1;
+    // drive();
+    // while (1)
+    // {
+      // if (atkAngleRound(iniAngle - selfAngelint) >= (angle-2) && atkAngleRound(iniAngle - selfAngelint) <= (angle+2))
+        // break;
+      // ATKPrcess();
+    // }
   }
 
   Forward(0);
@@ -1010,8 +1005,9 @@ void task (uint8_t numberoftask)
 
       turn_Angle(70,2);
 
+      toggleLD2(50);
       //finish the turning
-      for(uint8_t i = 0 ;i<5;i++)
+      for(uint8_t i = 0 ;i<4;i++)
       {
         Forward(15);
         drive();
@@ -1036,7 +1032,7 @@ void task (uint8_t numberoftask)
 
       while (1)
       {
-        if(cmf<19)
+        if(cmf<25)
           break;
 
         Forward(15);
@@ -1495,7 +1491,9 @@ int main(void)
   Set_angle(&htim2, TIM_CHANNEL_1, 0, 20000, 20);
   Set_angle(&htim2, TIM_CHANNEL_3, 90, 20000, 20);//90 for task 2
   // Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
-  Set_angle(&htim2, TIM_CHANNEL_4, 100, 20000, 20);
+  // Set_angle(&htim2, TIM_CHANNEL_4, 100, 20000, 20);
+  Set_angle(&htim2, TIM_CHANNEL_4, 60, 20000, 20);
+
 
   //Recode initial Pitch
   UART_DISABLE_RE(huart1);
@@ -1525,114 +1523,13 @@ int main(void)
 
     /****************Test******************/
     
-      ATKPrcess();
-      initial_selfAngelint= selfAngelint;
-
-      while (1)
-      {
-        if(cmf<40)
-          break;
-
-        Forward(15);
-        walkStraight();
-        drive();
-        togglewalk();
-      }
-      Forward(0);
-      drive();
-      UART_ENABLE_RE(huart3);
-      HAL_UART_Transmit(&huart3, "task2", 5, HAL_MAX_DELAY);
-      UART_DISABLE_RE(huart3);
-      HAL_Delay(500);
-      while (1)
-      {
-        UART_ENABLE_RE(huart3);
-        if (HAL_UART_Receive(&huart3, (uint8_t *)buf, 2, HAL_MAX_DELAY)==HAL_OK)
-        {
-          if (buf [0]='b')
-            break;
-        }
-      }
-      //buf[1]='2';
-      // 1 right; 2 front; 3 left
-      switch (buf[1])
-      {
-      case '1':
-        afterArrowIdent(45);
-        
-        turn_Angle(45,1);
-
-        Forward(20);
-        drive();
-        HAL_Delay(4500);
-        Forward(0);
-        drive();
-        HAL_Delay(500);
-        superAlignment(1);
-        celebrate();
-        break;
-      
-      case '2':
-        afterArrowIdent(90);
-
-        turn_Angle(90,2);
-
-        ATKPrcess();
-        initial_selfAngelint = selfAngelint;
-
-        while (1)
-        {
-          if (cmf < 40)
-            break;
-
-          Forward(15);
-          walkStraight();
-          drive();
-          togglewalk();
-        }
-
-        turn_Angle(90, 1);
-        superAlignment(1);
-        celebrate();
-
-        break;
-      case '3':
-        afterArrowIdent(135);
-
-        turn_Angle(135, 2);
-        ATKPrcess();
-        initial_selfAngelint = selfAngelint;
-
-        while (1)
-        {
-          if (cmf < 50)
-            break;
-
-          Forward(15);
-          walkStraight();
-          drive();
-          togglewalk();
-        }
-
-        turn_Angle(90, 1);
-        superAlignment(1);
-        celebrate();
-
-        break;
-      default:
-        break;
-      }
-
-    //toggleLD2(1000);
-    // turn_Angle(90,2);
-    // HAL_Delay(10000);
     /****************Test******************/
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
+    // drive(5);
     //just type the task number below
-    //task(1);
+    task(1);
   }
 
   /* USER CODE END 3 */
