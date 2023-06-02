@@ -1194,6 +1194,9 @@ void task (uint8_t numberoftask)
       drive();
       celebrate();
     }
+
+    UART_DISABLE_RE(huart3); 
+
     openmvAngle = GetOpemMv();
     // openmvAngle=100;
 
@@ -1271,8 +1274,8 @@ void task (uint8_t numberoftask)
         break;
 
       case '3':
-        afterArrowIdent(135);
-        turn_Angle(40, 2);
+        afterArrowIdent(120);
+        turn_Angle(45, 2);
         break;
 
       default:
@@ -1392,7 +1395,7 @@ void task (uint8_t numberoftask)
     
     HAL_Delay(3500);
 
-    turn_Angle(78,2);
+    turn_Angle(75,2);
     
     Forward(0);
     drive();
@@ -1580,8 +1583,8 @@ int main(void)
   // Servo initial position
   Set_angle(&htim2, TIM_CHANNEL_1, 0, 20000, 20);
   Set_angle(&htim2, TIM_CHANNEL_3, 90, 20000, 20);//90 for task 2
-  // Set_angle(&htim2,TIM_CHANNEL_4, 110,20000,20);
-  Set_angle(&htim2, TIM_CHANNEL_4, 110, 20000, 20);
+  Set_angle(&htim2,TIM_CHANNEL_4, 60,20000,20);
+  // Set_angle(&htim2, TIM_CHANNEL_4, 110, 20000, 20);
 
   //Recode initial Pitch
   UART_DISABLE_RE(huart1);
@@ -1610,15 +1613,15 @@ int main(void)
   {
 
     /****************Test******************/
-    hc12send('a');
+    //hc12send('a');
 
-    HAL_Delay(100);
+    //HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
     //just type the task number below
-    //task(2);
+    task(1);
     
     //printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cml, cmr);
     //HAL_Delay(500);
