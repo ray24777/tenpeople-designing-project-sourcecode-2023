@@ -1597,7 +1597,7 @@ int main(void)
   // }
   // UART_DISABLE_RE(huart3);
   
-  HAL_Delay(5000);
+  //HAL_Delay(5000);
   
   
   HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
@@ -1610,13 +1610,15 @@ int main(void)
   {
 
     /****************Test******************/
-    
+    hc12send('a');
+
+    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
     //just type the task number below
-    task(2);
+    //task(2);
     
     //printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cml, cmr);
     //HAL_Delay(500);
@@ -1782,7 +1784,7 @@ static void MX_UART5_Init(void)
 
   /* USER CODE END UART5_Init 1 */
   huart5.Instance = UART5;
-  huart5.Init.BaudRate = 9600;
+  huart5.Init.BaudRate = 115200;
   huart5.Init.WordLength = UART_WORDLENGTH_8B;
   huart5.Init.StopBits = UART_STOPBITS_1;
   huart5.Init.Parity = UART_PARITY_NONE;
