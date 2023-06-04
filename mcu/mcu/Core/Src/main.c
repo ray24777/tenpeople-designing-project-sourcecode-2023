@@ -1082,7 +1082,7 @@ void task (uint8_t numberoftask)
       drive();
       toggleLD2(500);
 
-      turn_Angle(70,2);
+      turn_Angle(65,2);
 
       //finish the turning
       for(uint8_t i = 0 ;i<5;i++)
@@ -1178,10 +1178,9 @@ void task (uint8_t numberoftask)
         //   toggleLD2(250);
         // }
         
-        
-        if((cml<20||cmr<20)&& time >30)
-          break;
 
+        if(cmf < 40 && time > 50)
+          break;
         
         Forward(15);
         walkStraight();
@@ -1235,6 +1234,8 @@ void task (uint8_t numberoftask)
     {
       ATKPrcess();
       initial_selfAngelint= selfAngelint;
+      
+      Set_angle(&htim2, TIM_CHANNEL_4, 110, 20000, 20);
 
       while (1)
       {
@@ -1270,12 +1271,12 @@ void task (uint8_t numberoftask)
         break;
       
       case '2':
-        afterArrowIdent(80);
+        afterArrowIdent(70);
         break;
 
       case '3':
-        afterArrowIdent(120);
-        turn_Angle(45, 2);
+        afterArrowIdent(118);
+        turn_Angle(40, 2);
         break;
 
       default:
@@ -1455,7 +1456,7 @@ void task (uint8_t numberoftask)
 
     HAL_Delay(1000);
 
-    Set_angle(&htim2, TIM_CHANNEL_1, 150, 20000, 20);
+    Set_angle(&htim2, TIM_CHANNEL_1, 120, 20000, 20);
     
     HAL_Delay(5000);
     
@@ -1463,7 +1464,7 @@ void task (uint8_t numberoftask)
     
     HAL_Delay(5000);
 
-    turn_Angle(75, 1);
+    turn_Angle(70, 1);
 
     ATKPrcess();
     initial_selfAngelint = selfAngelint;
@@ -1478,8 +1479,10 @@ void task (uint8_t numberoftask)
     //   togglewalk();
     // }
 
-    for(int mytmp = 0; mytmp < 1000; mytmp++)
+    for(int mytmp = 0; mytmp < 500; mytmp++)
     {
+      if(cmf <= 20)
+        break;
       Forward(15);
       walkStraight();
       drive();
@@ -1488,6 +1491,18 @@ void task (uint8_t numberoftask)
     Forward(0);
     drive();
 
+    HAL_Delay(1500);
+    for (uint8_t i =0; i<10; i++)
+      hc12send('a');
+    HAL_Delay(1500);
+    
+    for(int mytmp = 0; mytmp < 60; mytmp++)
+    {
+      Forward(15);
+      walkStraight();
+      drive();
+      HAL_Delay(100);
+    }
     celebrate();
 
     /****************TASK 2******************/
