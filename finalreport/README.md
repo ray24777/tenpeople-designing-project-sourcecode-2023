@@ -6,14 +6,14 @@
 ### Patio1
 In this section, the rover is required to follow a specific path with different colour and texture to the surrounding area while 4  turns are needed to make as well. After following the path, the rover needs to identify and go across a bridge. The third task is to recognise the gate and go through it and then stop.
 
-To tackle these tasks, Openmv requires visual recognition and pavement judgment capabilities to determine the optimal route. Three sensors are also needed to ensure correct crossing of the bridge and gate.
+To complete these tasks, Openmv requires visual recognition and pavement judgment capabilities to determine the optimal route. Three sensors are also needed to ensure correct crossing of the bridge and gate.
 
 ### Patio2
 For Patio 2, the rover first needs to identify the direction of the arrow and move in the direction specified according to the identification result. In the next part, the rover needs to load and drop a ping pong ball in a specific basket. Finally, the rover enters a designated area and transmits student number, name and time information to the laptop at 433Hz radio signal.
 
 
 
-To tackle theses tasks, a algorithm is needed to train the rover for identifying the arrow direction. Additionally, a robotic arm is equipped on the rover to load and deliver the ping pong ball. For the last task, we decided to use a wireless transceiver to realize communication capability. 
+To accompolish these tasks, a algorithm is needed to train the rover for identifying the arrow direction. Additionally, a robotic arm is equipped on the rover to load and deliver the ping pong ball. For the last task, we decided to use a wireless transceiver to realize communication capability. 
 
 ## Top System
 
