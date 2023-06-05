@@ -923,22 +923,22 @@ void turn_Angle(int angle, int direction)
     // Turn_Right(150); //减小目前角度
     // drive();
 
-    Forward(0);
-    drive();
-    HAL_Delay(500);
+    // Forward(0);
+    // drive();
+    // HAL_Delay(500);
 
-    Forward(4);
-    yflag=1;
-    drive();
-    while (1)
-    {
-      // toggleLD2(5);
-      if (atkAngleRound(selfAngelint - iniAngle) >= (angle-3) && atkAngleRound(selfAngelint - iniAngle) <= (angle+3))
-        break;
-      ATKPrcess();
+    // Forward(4);
+    // yflag=1;
+    // drive();
+    // while (1)
+    // {
+    //   // toggleLD2(5);
+    //   if (atkAngleRound(selfAngelint - iniAngle) >= (angle-3) && atkAngleRound(selfAngelint - iniAngle) <= (angle+3))
+    //     break;
+    //   ATKPrcess();
 
-      // SendPCint(aimAngle);
-    }
+    //   // SendPCint(aimAngle);
+    // }
   }
   else if (direction == 2)
   {
@@ -1003,25 +1003,23 @@ void turn_Angle(int angle, int direction)
       // printf("diff=%d, selfangle=%d \r\n", atkAngleRound(selfAngelint - iniAngle), selfAngelint);
     }
 
-    Forward(0);
-    drive();
+    // Forward(0);
+    // drive();
     
-    HAL_Delay(500);
+    // HAL_Delay(500);
     
-    Forward(4);
-    xflag=1;
-    drive();
-    while (1)
-    {
-      if (atkAngleRound(iniAngle - selfAngelint) >= (angle-2) && atkAngleRound(iniAngle - selfAngelint) <= (angle+2))
-        break;
-      ATKPrcess();
-    }
+    // Forward(4);
+    // xflag=1;
+    // drive();
+    // while (1)
+    // {
+    //   if (atkAngleRound(iniAngle - selfAngelint) >= (angle-2) && atkAngleRound(iniAngle - selfAngelint) <= (angle+2))
+    //     break;
+    //   ATKPrcess();
+    // }
   }
 
   Forward(0);
-  // Left(0);
-  // Turn_Left(0);
   drive();
   toggleLD2(100);
   return;
@@ -1491,13 +1489,18 @@ void task (uint8_t numberoftask)
     Forward(0);
     drive();
 
-    HAL_Delay(1500);
+    HAL_Delay(1000);
     for (uint8_t i =0; i<10; i++)
       hc12send('a');
-    HAL_Delay(1500);
+    HAL_Delay(2000);
     
-    for(int mytmp = 0; mytmp < 60; mytmp++)
+    ATKPrcess();
+    initial_selfAngelint = selfAngelint;
+
+    for(int mytmp = 0; mytmp < 100; mytmp++)
     {
+      if(cmf <= 40)
+        break;
       Forward(15);
       walkStraight();
       drive();
@@ -1636,7 +1639,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     //just type the task number below
-    task(1);
+    task(2);
     
     //printf("Distance left = %.3f cm, Distance right = %.3f cm.\r\n", cml, cmr);
     //HAL_Delay(500);
